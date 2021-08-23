@@ -19,10 +19,11 @@ class FileNameError(Exception):
 
 
 class Label:
+    mask = [0, 1, 2]
+    gender = [0, 1]
+    age = [0, 1, 2]
+
     def __init__(self):
-        self.mask = [0, 1, 2]
-        self.gender = [0, 1]
-        self.age = [0, 1, 2]
         self.feature_func = {
             "gender": self.gender_feature,
             "mask": self.mask_feature,
