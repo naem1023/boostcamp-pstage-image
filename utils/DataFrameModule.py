@@ -73,8 +73,8 @@ class DataFrameModule:
             target_path = glob.glob(target_path)
         return target_path
 
-def generate_csv(train_pd, train_dir):
+def generate_csv(train_pd, train_dir, file_path):
     train_df_manager = DataFrameModule(train_pd, train_dir)
     csv_file = train_df_manager.get_df_with_path()
-    csv_file.to_csv('./train-with-system-path.csv')
+    csv_file.to_csv(file_path)
     print('Generate csv file!!')
