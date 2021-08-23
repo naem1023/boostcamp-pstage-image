@@ -1,45 +1,39 @@
 from torch.utils.data import Dataset, DataLoader
+from utils import get_test_img_path
+from utils import Label
+from PIL import Image
+
 
 class MaskDataset(Dataset):
-    def __init__(self, data_df, images_dir, transforms, feature=None, train=True):    
+    def __init__(
+        self, data_df, image_dir, transforms=None, feature=None, train=True
+    ):
         self.data_df = data_df
-        self.images_dir = images_dir
-        self.classes = range(18)
+        self.image_dir = image_dir
+        self.label = Label()
+        self.classes = self.label.get_classes(feature)
         self.transforms = transforms
-        self.train = traind
+        self.train = train
         self.feature = feature
 
         if not train:
-            self.test_path_list = get_test_img_path()
-        
+            # system path list of test images
+            self.data_df = get_test_img_path(self.image_dir)
+
     def __len__(self):
-        return len(self.images)
+        return self.data_df.shape[0]
 
     def __getitem__(self, idx):
-        if train:
-            # merge path and feature
-            base_path = self.data_df.loc[idx, 'path']
-
-            # Get all possilbe path for base_path and feature
-            target_path = get_train_img_path(self.images_dir, base_path, self.feature)
-
-            # Append asterisk for using glob, cause all the images have different extension.
-            if isinstance(target_path, list):
-                target_path = [target_path + '*' for p in target_path]
-            elif isinstance(target_path, str):
-                target_path = target_path + '*'
-            target_path = glob.glob(target_path)
+        if self.train:
+            target_path = self.data_df.iloc[idx]["system_path"]
+            label = self.label.get_label(target_path, self.feature)
         else:
-            target_path = self.test_path_list[idx]
+            target_path = self.data_df[idx]
+            label = None
 
         img = Image.open(target_path)
 
-        if self.train:
-            label = get_label(path)
-        else:
-            label = get_test_label(path)
-
         if self.transforms:
             img = self.transforms(img)
-            
+
         return img, label

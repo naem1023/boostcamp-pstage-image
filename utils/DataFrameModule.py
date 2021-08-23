@@ -27,9 +27,9 @@ def get_train_img_path(train_dir, img_path, feature=None):
         path = os.path.join(train_dir, f'{img_path}/{feature}')
     return path
         
-def get_test_img_path():
+def get_test_img_path(image_dir):
     """Return with extension. (jpg, png, ...) """
-    return [os.path.join(train_dir, image_id) for image_id in test_pd['ImageID']]
+    return [os.path.join(image_dir, image_id) for image_id in test_pd['ImageID']]
 
 class DataFrameModule:
     """
