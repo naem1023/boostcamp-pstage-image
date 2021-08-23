@@ -18,7 +18,7 @@ class MaskDataset(Dataset):
 
         if not train:
             # system path list of test images
-            self.data_df = get_test_img_path(self.image_dir)
+            self.data_df = get_test_img_path(self.data_df, self.image_dir)
 
     def __len__(self):
         return self.data_df.shape[0]
