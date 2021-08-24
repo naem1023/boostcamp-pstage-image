@@ -16,96 +16,59 @@ class Trainer:
         self.start_epoch = 1
 
     def train(self, train_dataloader, validate_dataloader):
-        self._train(train_dataloader)
-        self._validatie(validate_dataloader)
+        train_acc = self._forward(train_dataloader)
+        valid_acc = self._forward(validate_dataloader, train=False)
+        return train_acc, valid_acc
 
-    def _train(self, train_dataloader):
-        best_test_accuracy = 0.0
-        best_test_loss = 9999.0
-
+    def _forward(self, dataloader, train=True):
         for epoch in range(self.epochs):
             running_loss = 0.0
             running_acc = 0.0
 
-            self.model.train()
+            if train:
+                self.model.train()
+            else:
+                self.model.eval()
 
-            with tqdm(train_dataloader, unit="batch") as tepoch:
-                # for ind, (images, labels) in enumerate(tepoch):
-                for ind, data in enumerate(tepoch):
-                    print(data.shape)
+            with tqdm(dataloader, unit="batch") as tepoch:
+                len(dataloader)
+                for ind, (images, labels) in enumerate(tepoch):
                     tepoch.set_description(f"Epoch {epoch}")
-                    images = images.to(self.device)
+                    images = (
+                        images["image"].type(torch.FloatTensor).to(self.device)
+                    )
+
                     labels = labels.to(self.device)
 
-                    self.optimizer.zero_grad()
+                    if train:
+                        self.optimizer.zero_grad()
 
                     # grad 계산
-                    with torch.set_grad_enabled(True):
+                    with torch.set_grad_enabled(train):
                         logits = self.model(images)
                         _, preds = torch.max(logits, 1)
 
                         loss = self.criterion(logits, labels)
 
-                        loss.backward()
-                        self.optimizer.step()
+                        if train:
+                            loss.backward()
+                            self.optimizer.step()
 
                     running_loss += loss.item() * images.size(0)
-                    iter_correct = torch.sum(preds == labels.data)
-                    running_acc += iter_correct
+                    running_correct = (
+                        torch.sum(preds == labels.data).item() / self.batch_size
+                    )
+                    running_acc += running_correct
 
                     tepoch.set_postfix(
-                        loss=loss.item(),
-                        accuracy=iter_correct.item() / self.batch_size,
+                        loss=loss.item(), accuracy=running_correct,
                     )
 
-            epoch_loss = running_loss / len(self.train_dataloader.dataset)
-            epoch_acc = running_acc / len(self.train_dataloader.dataset)
+            epoch_loss = running_loss / len(dataloader)
+            epoch_acc = running_acc / len(dataloader)
 
             print(
                 f"현재 epoch-{epoch}의 데이터 셋에서 평균 Loss : {epoch_loss:.3f}, 평균 Accuracy : {epoch_acc:.3f}"
             )
-        print("학습 종료!")
-        print(
-            f"최고 accuracy : {best_test_accuracy}, 최고 낮은 loss : {best_test_loss}"
-        )
+        return epoch_acc
 
-    def _validatie(self, validate_dataloader):
-        best_test_accuracy = 0.0
-        best_test_loss = 9999.0
-
-        for epoch in range(self.epochs):
-            running_loss = 0.0
-            running_acc = 0.0
-
-            self.model.eval()
-
-            with tqdm(validate_dataloader, unit="batch") as tepoch:
-                for ind, (images, labels) in enumerate(tepoch):
-                    tepoch.set_description(f"Epoch {epoch}")
-                    images = images.to(self.device)
-                    labels = labels.to(self.device)
-
-                    logits = self.model(images)
-                    _, preds = torch.max(logits, 1)
-
-                    loss = self.criterion(logits, labels)
-
-                    running_loss += loss.item() * images.size(0)
-                    iter_correct = torch.sum(preds == labels.data)
-                    running_acc += iter_correct
-
-                    tepoch.set_postfix(
-                        loss=loss.item(),
-                        accuracy=iter_correct.item() / self.batch_size,
-                    )
-
-            epoch_loss = running_loss / len(self.train_dataloader.dataset)
-            epoch_acc = running_acc / len(self.train_dataloader.dataset)
-
-            print(
-                f"현재 epoch-{epoch}의 데이터 셋에서 평균 Loss : {epoch_loss:.3f}, 평균 Accuracy : {epoch_acc:.3f}"
-            )
-        print("학습 종료!")
-        print(
-            f"최고 accuracy : {best_test_accuracy}, 최고 낮은 loss : {best_test_loss}"
-        )
