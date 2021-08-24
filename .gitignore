@@ -1,2 +1,8 @@
 **/__pycache__/
 *.xml
+wandb/
+*.old
+*.pt
+*.csv
+*.txt
+*.yml

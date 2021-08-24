@@ -2,6 +2,7 @@ from torch.utils.data import Dataset, DataLoader
 from utils import get_test_img_path
 from utils import Label
 from PIL import Image
+import numpy as np
 
 
 class MaskDataset(Dataset):
@@ -22,7 +23,10 @@ class MaskDataset(Dataset):
             self.data_df = get_test_img_path(self.data_df, self.image_dir)
 
     def __len__(self):
-        return self.data_df.shape[0]
+        if isinstance(self.data_df, list):
+            return len(self.data_df)
+        else:
+            return self.data_df.shape[0]
 
     def __getitem__(self, idx):
         if self.train:
@@ -30,11 +34,11 @@ class MaskDataset(Dataset):
             label = self.label.get_label(target_path, self.feature)
         else:
             target_path = self.data_df[idx]
-            label = None
+            label = target_path
 
-        img = Image.open(target_path)
+        img = np.array(Image.open(target_path))
 
         if self.transforms:
-            img = self.transforms(img)
+            img = self.transforms(image=img)
 
         return img, label

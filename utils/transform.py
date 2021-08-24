@@ -3,7 +3,7 @@ import albumentations.pytorch
 
 transformation = A.Compose(
     [
-        A.Resize(224, 244),
+        A.Resize(224, 224),
         A.HorizontalFlip(p=0.5),
         A.OneOf([A.GaussNoise()], p=0.2),
         A.OneOf(
@@ -25,9 +25,16 @@ transformation = A.Compose(
             ],
             p=0.3,
         ),
+        A.ShiftScaleRotate(
+            shift_limit=0.2,
+            scale_limit=0.2,
+            rotate_limit=10,
+            border_mode=0,
+            p=0.5,
+        ),
         A.RandomBrightnessContrast(p=0.2),
         A.Rotate(limit=(-30, 30), p=0.2),
+        A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225],),
         albumentations.pytorch.transforms.ToTensorV2(),
     ]
 )
-
