@@ -29,11 +29,7 @@ model_name = "efficientnet"
 def main(feature_split, train_df, test_df):
     if feature_split:
         for feature in config.features:
-<<<<<<< HEAD
             feature_train(train_df, test_df, feature, config.model_name)
-=======
-            feature_train(train_df, test_df, feature, model_name)
->>>>>>> 6852a782b6c0b56e054b91befbdaeffc962a878d
 
 
 if __name__ == "__main__":
