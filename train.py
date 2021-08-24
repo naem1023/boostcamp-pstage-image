@@ -7,12 +7,14 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.transforms import Resize, ToTensor, Normalize
 
+
 from utils import generate_csv
 from data_set import MaskDataset
 from model import PretrainedModel
 from utils import Label
 from trainer import Trainer
 import config
+import transform
 
 # fix random seeds for reproducibility
 SEED = 123
@@ -24,8 +26,9 @@ np.random.seed(SEED)
 
 def main(feature_split, train_df, test_df):
     if feature_split:
-        transformation = transforms.Compose([ToTensor(), Resize(224)])
-
+        # transformation = transforms.Compose([ToTensor(), Resize(224)])
+        transformation = transform.transformation
+        
         train_set = MaskDataset(
             train_df,
             config.train_dir,
