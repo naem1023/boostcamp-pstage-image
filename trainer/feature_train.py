@@ -2,9 +2,12 @@ import torch
 from torch.utils.data import DataLoader
 from sklearn.model_selection import KFold
 import os
+<<<<<<< HEAD
 import wandb
 from datetime import datetime
 
+=======
+>>>>>>> 6852a782b6c0b56e054b91befbdaeffc962a878d
 
 from utils import transformation
 from data_set import MaskDataset
@@ -15,6 +18,7 @@ import config
 
 
 def feature_train(train_df, test_df, feature, model_name):
+<<<<<<< HEAD
     print(f"{feature}, {model_name}")
     run = wandb.init(
         project="aistage-mask", entity="naem1023", tags=[feature, model_name]
@@ -23,6 +27,8 @@ def feature_train(train_df, test_df, feature, model_name):
     wandb.config.batch_size = config.BATCH_SIZE
     wandb.config.epoch = config.NUM_EPOCH
     wandb.config.k_fold = config.k_split
+=======
+>>>>>>> 6852a782b6c0b56e054b91befbdaeffc962a878d
     train_dataset = MaskDataset(
         train_df, config.train_dir, transforms=transformation, feature=feature,
     )
@@ -31,8 +37,11 @@ def feature_train(train_df, test_df, feature, model_name):
 
     device = torch.device("cuda:0")
     model = PretrainedModel(model_name, len(Label.mask)).model
+<<<<<<< HEAD
     wandb.watch(model)
 
+=======
+>>>>>>> 6852a782b6c0b56e054b91befbdaeffc962a878d
     optimizer = torch.optim.Adam(
         model.parameters(), lr=config.LEARNING_RATE
     )  # weight 업데이트를 위한 optimizer를 Adam으로 사용함
@@ -75,7 +84,12 @@ def feature_train(train_df, test_df, feature, model_name):
         _, valid_acc = trainer.train(train_dataloader, validate_dataloader)
         valid_acc_list.append(valid_acc)
 
+<<<<<<< HEAD
     model_name = f"{model_name}-{feature}-{torch.mean(torch.tensor(valid_acc_list)).item():.2f}-{datetime.now().isoformat()}.pt"
     torch.save(model.state_dict(), os.path.join(config.model_dir, model_name))
 
     run.finish()
+=======
+    model_name = f"{model_name}-{feature}-{torch.mean(torch.tensor(valid_acc_list)).item():.3f}.pt"
+    torch.save(model.state_dict(), os.path.join(config.model_dir, model_name))
+>>>>>>> 6852a782b6c0b56e054b91befbdaeffc962a878d

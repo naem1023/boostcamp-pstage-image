@@ -17,6 +17,12 @@ class Predictor:
     def predict(self, dataloader, feature):
         result = []
 
+<<<<<<< HEAD
+=======
+        running_loss = 0.0
+        running_acc = 0.0
+
+>>>>>>> 6852a782b6c0b56e054b91befbdaeffc962a878d
         self.model.eval()
 
         with tqdm(dataloader, unit="batch") as tepoch:

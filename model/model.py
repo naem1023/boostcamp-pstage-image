@@ -4,6 +4,7 @@ import math
 
 import torchvision
 import torch
+from efficientnet_pytorch import EfficientNet
 
 from efficientnet_pytorch import EfficientNet
 from vit_pytorch import ViT
@@ -41,6 +42,7 @@ class PretrainedModel:
             self.model.fc = torch.nn.Linear(
                 in_features=512, out_features=class_num, bias=True
             )
+<<<<<<< HEAD
         elif name == "volod3":
             self.model = volo.volo_d1()
             load_pretrained_weights(
@@ -69,6 +71,8 @@ class PretrainedModel:
                 emb_dropout=0.1,
                 layer_dropout=0.05,  # randomly dropout 5% of the layers
             )
+=======
+>>>>>>> 6852a782b6c0b56e054b91befbdaeffc962a878d
 
     def init_weight(self):
         torch.nn.init.xavier_uniform_(self.model.fc.weight)

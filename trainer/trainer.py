@@ -58,7 +58,11 @@ class Trainer:
 
                     running_loss += loss.item() * images.size(0)
                     running_correct = (
+<<<<<<< HEAD
                         torch.sum(preds == labels.data).item() / preds.shape[0]
+=======
+                        torch.sum(preds == labels.data).item() / self.batch_size
+>>>>>>> 6852a782b6c0b56e054b91befbdaeffc962a878d
                     )
                     running_acc += running_correct
 
@@ -68,6 +72,7 @@ class Trainer:
 
             epoch_loss = running_loss / len(dataloader)
             epoch_acc = running_acc / len(dataloader)
+<<<<<<< HEAD
 
             if train:
                 wandb.log({"accuracy": epoch_acc})
@@ -75,6 +80,8 @@ class Trainer:
             else:
                 wandb.log({"val_acc": epoch_acc})
                 wandb.log({"val_loss": epoch_loss})
+=======
+>>>>>>> 6852a782b6c0b56e054b91befbdaeffc962a878d
 
             print(
                 f"현재 epoch-{epoch}의 데이터 셋에서 평균 Loss : {epoch_loss:.3f}, 평균 Accuracy : {epoch_acc:.3f}"

@@ -16,6 +16,7 @@ import glob
 
 
 def main():
+<<<<<<< HEAD
     model_path = glob.glob(config.model_dir + f"/{config.model_name}*.pt")
     print(model_path)
     test_df = pd.read_csv(config.test_csv)
@@ -25,6 +26,14 @@ def main():
         for path in model_path:
             if feature in path:
                 break
+=======
+    model_path = glob.glob(config.model_dir + "/*.pt")
+    test_df = pd.read_csv(config.test_csv)
+
+    result_list = []
+    for path in model_path:
+        feature = path.split("-")[0]
+>>>>>>> 6852a782b6c0b56e054b91befbdaeffc962a878d
         test_dataset = MaskDataset(
             test_df, config.test_dir, transforms=transformation, train=False
         )
@@ -34,7 +43,11 @@ def main():
         )
 
         device = torch.device("cuda:0")
+<<<<<<< HEAD
         model = PretrainedModel(config.model_name, len(Label.mask)).model
+=======
+        model = PretrainedModel("resnet18", len(Label.mask)).model
+>>>>>>> 6852a782b6c0b56e054b91befbdaeffc962a878d
         model.load_state_dict(torch.load(path))
 
         model.to(device)
@@ -73,7 +86,10 @@ def predict(result):
         submission, columns=["ImageID", "ans"]
     )
     result_df.to_csv("submission.csv", index=False)
+<<<<<<< HEAD
     result_df.to_csv("submission.csv", index=False)
+=======
+>>>>>>> 6852a782b6c0b56e054b91befbdaeffc962a878d
 
 
 if __name__ == "__main__":
