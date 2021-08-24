@@ -6,7 +6,7 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.transforms import Resize, ToTensor, Normalize
-
+from sklearn.model_selection import KFold
 
 from utils import generate_csv
 from data_set import MaskDataset
@@ -14,7 +14,7 @@ from model import PretrainedModel
 from utils import Label
 from trainer import Trainer
 import config
-import transform
+from utils import transformation
 
 # fix random seeds for reproducibility
 SEED = 123
@@ -27,48 +27,52 @@ np.random.seed(SEED)
 def main(feature_split, train_df, test_df):
     if feature_split:
         # transformation = transforms.Compose([ToTensor(), Resize(224)])
-        transformation = transform.transformation
-        
-        train_set = MaskDataset(
+
+        train_dataset = MaskDataset(
             train_df,
             config.train_dir,
             transforms=transformation,
             feature="mask",
         )
-        test_set = MaskDataset(
+        test_dataset = MaskDataset(
             test_df, config.test_dir, transforms=transformation, train=False
         )
-        train_dataloader = DataLoader(
-            dataset=train_set, batch_size=config.BATCH_SIZE, shuffle=True
-        )
-        test_dataloader = DataLoader(
-            dataset=test_set, batch_size=config.BATCH_SIZE, shuffle=False
-        )
-        img, labels = next(iter(train_dataloader))
+        critertion = torch.nn.CrossEntropyLoss()
 
-        critertion = (
-            torch.nn.CrossEntropyLoss()
-        )  # 분류 학습 때 많이 사용되는 Cross entropy loss를 objective function으로 사용 - https://en.wikipedia.org/wiki/Cross_entropy
-
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
+        device = torch.device("cuda:0")
         model = PretrainedModel("resnet18", len(Label.mask)).model
         optimizer = torch.optim.Adam(
             model.parameters(), lr=config.LEARNING_RATE
         )  # weight 업데이트를 위한 optimizer를 Adam으로 사용함
         model.to(device)
-
         trainer = Trainer(
             model,
             config.NUM_EPOCH,
             critertion,
             optimizer,
-            train_dataloader,
             device,
             config.BATCH_SIZE,
         )
 
-        trainer.train()
+        kfold = KFold(n_splits=8, shuffle=True)
+        for fold, (train_idx, validate_idx) in enumerate(
+            kfold.split(train_dataset)
+        ):
+            print(f"Start train with {fold} fold")
+            train_dataloader = DataLoader(
+                dataset=train_idx,
+                batch_size=config.BATCH_SIZE,
+                shuffle=True,
+                num_workers=4,
+            )
+            validate_dataloader = DataLoader(
+                dataset=validate_idx,
+                batch_size=config.BATCH_SIZE,
+                shuffle=False,
+                num_workers=4,
+            )
+            trainer.train(train_dataloader, validate_dataloader)
+        # img, labels = next(iter(train_dataloader))
 
 
 if __name__ == "__main__":

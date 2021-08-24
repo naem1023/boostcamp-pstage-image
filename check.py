@@ -21,6 +21,8 @@ def main():
 
     print(count)
 
+    print([sum(c[1]) for c in count])
+
 
 if __name__ == "__main__":
     main()

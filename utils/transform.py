@@ -1,4 +1,5 @@
 import albumentations as A
+import albumentations.pytorch
 
 transformation = A.Compose(
     [
@@ -25,8 +26,8 @@ transformation = A.Compose(
             p=0.3,
         ),
         A.RandomBrightnessContrast(p=0.2),
-        A.Rotate(limit=(-30, 30), p=0.2)],
-        A.pytorch.transforms.ToTensor(),
+        A.Rotate(limit=(-30, 30), p=0.2),
+        albumentations.pytorch.transforms.ToTensorV2(),
     ]
 )
 
