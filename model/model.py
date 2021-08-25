@@ -6,7 +6,6 @@ import torchvision
 import torch
 from efficientnet_pytorch import EfficientNet
 
-from efficientnet_pytorch import EfficientNet
 from vit_pytorch import ViT
 from vit_pytorch.deepvit import DeepViT
 from vit_pytorch.cait import CaiT
@@ -35,13 +34,11 @@ class PretrainedModel:
 
             self.init_weight()
 
-        elif name == "efficientnet":
+        elif name == "efficientnet-b4":
             self.model = EfficientNet.from_pretrained(
-                "efficientnet-b7", num_classes=class_num
+                "efficientnet-b4", num_classes=class_num
             )
-            self.model.fc = torch.nn.Linear(
-                in_features=512, out_features=class_num, bias=True
-            )
+            self.reset_parameters(self.model._fc)
         elif name == "volod3":
             self.model = volo.volo_d1()
             load_pretrained_weights(
@@ -82,6 +79,12 @@ class PretrainedModel:
                 emb_dropout=0.1,
                 layer_dropout=0.05,  # randomly dropout 5% of the layers
             )
+
+    def reset_parameters(self, layer):
+        bound = 1 / math.sqrt(layer.weight.size(1))
+        torch.nn.init.uniform_(layer.weight, -bound, bound)
+        if layer.bias is not None:
+            torch.nn.init.uniform_(layer.bias, -bound, bound)
 
     def init_weight(self):
         torch.nn.init.xavier_uniform_(self.model.fc.weight)

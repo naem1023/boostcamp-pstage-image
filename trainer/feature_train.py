@@ -1,16 +1,18 @@
 import torch
 from torch.utils.data import DataLoader
-from sklearn.model_selection import KFold
+
+from torchensemble.bagging import BaggingClassifier
+from torchensemble.utils.logging import set_logger
+
 import os
 import wandb
 from datetime import datetime
-
 
 from utils import transformation
 from data_set import MaskDataset
 from model import PretrainedModel
 from utils import Label
-from trainer import Trainer
+from . import k_fold
 import config
 
 
@@ -23,6 +25,9 @@ def feature_train(train_df, test_df, feature, model_name):
     wandb.config.batch_size = config.BATCH_SIZE
     wandb.config.epoch = config.NUM_EPOCH
     wandb.config.k_fold = config.k_split
+
+    model_dir = os.path.join(config.model_dir, str(datetime.now().isoformat()))
+    os.mkdir(model_dir)
     train_dataset = MaskDataset(
         train_df, config.train_dir, transforms=transformation, feature=feature,
     )
@@ -37,47 +42,68 @@ def feature_train(train_df, test_df, feature, model_name):
         model.parameters(), lr=config.LEARNING_RATE
     )  # weight 업데이트를 위한 optimizer를 Adam으로 사용함
     model.to(device)
-    trainer = Trainer(
-        model,
-        config.NUM_EPOCH,
-        critertion,
-        optimizer,
-        device,
-        config.BATCH_SIZE,
-    )
 
-    valid_acc_list = []
-    kfold = KFold(n_splits=config.k_split, shuffle=True)
-    for fold, (train_idx, validate_idx) in enumerate(
-        kfold.split(train_dataset)
-    ):
-        train_subsampler = torch.utils.data.SubsetRandomSampler(train_idx)
-        validate_subsampler = torch.utils.data.SubsetRandomSampler(validate_idx)
+    if feature == "age":
+        epoch = config.NUM_EPOCH + 5
+    else:
+        epoch = config.NUM_EPOCH
 
-        print(f"Start train with {fold} fold")
+    if config.ensemble:
+        ensemble_model = BaggingClassifier(
+            estimator=model, n_estimators=10, cuda=True,
+        )
+        logger = set_logger(f"{feature}-ensemble-training", use_tb_logger=True)
+        ensemble_model.set_optimizer("Adam", lr=1e-3, weight_decay=5e-4)
+
+        train_num = int(len(train_dataset) * 0.8)
+        test_num = len(train_dataset) - train_num
+
+        train_sampler = torch.utils.data.RandomSampler(
+            train_dataset, num_samples=train_num, replacement=True
+        )
+        test_sampler = torch.utils.data.RandomSampler(
+            train_dataset, num_samples=test_num, replacement=True
+        )
+
         train_dataloader = DataLoader(
             dataset=train_dataset,
             batch_size=config.BATCH_SIZE,
-            sampler=train_subsampler,
+            sampler=train_sampler,
             num_workers=4,
         )
-        validate_dataloader = DataLoader(
+        test_dataloader = DataLoader(
             dataset=train_dataset,
             batch_size=config.BATCH_SIZE,
-            sampler=validate_subsampler,
+            sampler=test_sampler,
             num_workers=4,
         )
-        img, labels = next(iter(train_dataloader))
 
-        print(train_dataloader.dataset)
-        print(len(train_dataloader.dataset))
+        model_name = f"{model_name}-{feature}-{wandb.run.name}-{datetime.now().isoformat()}.pt"
+        model_path = os.path.join(model_dir, model_name)
 
-        _, valid_acc = trainer.train(
-            train_dataloader, validate_dataloader, feature
+        ensemble_model.fit(
+            train_loader=train_dataloader,
+            epochs=epoch,
+            test_loader=test_dataloader,
+            save_model=True,
+            save_dir=model_path,
+            log_interval=100
+            # wandb=wandb,
         )
-        valid_acc_list.append(valid_acc)
+    else:
+        kt = k_fold.KFoldTrainer(
+            config.k_split,
+            feature,
+            epoch,
+            config.BATCH_SIZE,
+            model,
+            critertion,
+            optimizer,
+            device,
+        )
+        valid_acc_list = kt.train(train_dataset)
 
-    model_name = f"{model_name}-{feature}-{torch.mean(torch.tensor(valid_acc_list)).item():.2f}-{datetime.now().isoformat()}.pt"
-    torch.save(model.state_dict(), os.path.join(config.model_dir, model_name))
+        model_name = f"{model_name}-{feature}-{wandb.run.name}-{torch.mean(torch.tensor(valid_acc_list)).item():.2f}-{datetime.now().isoformat()}.pt"
+        torch.save(model.state_dict(), os.path.join(model_dir, model_name))
 
     run.finish()

@@ -1,2 +1,2 @@
-from .trainer import *
+from .train import *
 from .feature_train import *

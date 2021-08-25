@@ -8,9 +8,10 @@ with_system_path_csv = "/opt/ml/code/train-with-system-path.csv"
 model_dir = "/opt/ml/code/saved_model"
 BATCH_SIZE = 50
 
-NUM_EPOCH = 6
-k_split = 3
-model_name = "efficientnet"
+NUM_EPOCH = 5
+k_split = 5
+model_name = "efficientnet-b4"
+ensemble = True
 
 if model_name == "deit":
     LEARNING_RATE = 0.0005

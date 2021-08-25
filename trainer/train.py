@@ -5,7 +5,7 @@ import wandb
 import config
 
 
-class Trainer:
+class BaseTrainer:
     def __init__(
         self, model, epochs, criterion, optimizer, device, batch_size,
     ):
@@ -17,14 +17,18 @@ class Trainer:
         self.batch_size = batch_size
         self.start_epoch = 1
 
-    def train(self, train_dataloader, validate_dataloader, feature):
-        train_acc = self._forward(train_dataloader, feature=feature)
+    def train(self, train_dataloader, validate_dataloader, feature, epoch):
+        train_acc = self._forward(
+            train_dataloader, feature=feature, epoch=epoch
+        )
         valid_acc = self._forward(
-            validate_dataloader, train=False, feature=feature
+            validate_dataloader, train=False, feature=feature, epoch=epoch
         )
         return train_acc, valid_acc
 
-    def _forward(self, dataloader, train=True, feature=None):
+    def _forward(
+        self, dataloader, train=True, feature=None, epoch=config.NUM_EPOCH
+    ):
         for epoch in range(self.epochs):
             running_loss = 0.0
             running_acc = 0.0
@@ -38,9 +42,7 @@ class Trainer:
                 len(dataloader)
                 for ind, (images, labels) in enumerate(tepoch):
                     tepoch.set_description(f"{feature}, Epoch {epoch}")
-                    images = (
-                        images["image"].type(torch.FloatTensor).to(self.device)
-                    )
+                    images = images.to(self.device)
 
                     labels = labels.to(self.device)
 
@@ -52,7 +54,7 @@ class Trainer:
                         logits = self.model(images)
                         if (
                             config.model_name == "deit"
-                            or config.model_name == "efficientnet"
+                            or config.model_name == "efficientnet-b4"
                         ):
                             preds = torch.nn.functional.softmax(logits, dim=-1)
                             # finally get the index of the prediction with highest score

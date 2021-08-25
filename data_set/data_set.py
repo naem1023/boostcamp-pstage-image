@@ -3,6 +3,7 @@ from utils import get_test_img_path
 from utils import Label
 from PIL import Image
 import numpy as np
+import torch
 
 
 class MaskDataset(Dataset):
@@ -41,4 +42,4 @@ class MaskDataset(Dataset):
         if self.transforms:
             img = self.transforms(image=img)
 
-        return img, label
+        return img["image"].type(torch.FloatTensor), label

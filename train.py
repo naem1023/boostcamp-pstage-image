@@ -14,12 +14,11 @@ import config
 from trainer import feature_train
 
 # fix random seeds for reproducibility
-SEED = 123
+SEED = 12342
 torch.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)
-model_name = "efficientnet"
 
 
 def main(feature_split, train_df, test_df):
