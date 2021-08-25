@@ -19,7 +19,9 @@ class Trainer:
 
     def train(self, train_dataloader, validate_dataloader, feature):
         train_acc = self._forward(train_dataloader, feature=feature)
-        valid_acc = self._forward(validate_dataloader, train=False)
+        valid_acc = self._forward(
+            validate_dataloader, train=False, feature=feature
+        )
         return train_acc, valid_acc
 
     def _forward(self, dataloader, train=True, feature=None):

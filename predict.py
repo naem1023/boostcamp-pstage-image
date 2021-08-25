@@ -10,8 +10,9 @@ from utils import transformation
 from model import PretrainedModel
 from predict import Predictor
 from utils import Label
-
+from utils import get_time
 import config
+
 import glob
 
 
@@ -72,8 +73,10 @@ def predict(result):
     result_df = pd.DataFrame.from_records(
         submission, columns=["ImageID", "ans"]
     )
-    result_df.to_csv("submission.csv", index=False)
-    result_df.to_csv("submission.csv", index=False)
+
+    result_df.to_csv(
+        f"{config.model_name}-{get_time()}-submission.csv", index=False
+    )
 
 
 if __name__ == "__main__":
