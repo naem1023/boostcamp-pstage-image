@@ -3,10 +3,6 @@ import pandas as pd
 import numpy as np
 import wandb
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 6852a782b6c0b56e054b91befbdaeffc962a878d
 from torchvision import transforms
 from torchvision.transforms import Resize, ToTensor, Normalize
 import torch

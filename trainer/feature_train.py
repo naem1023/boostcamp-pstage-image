@@ -72,7 +72,9 @@ def feature_train(train_df, test_df, feature, model_name):
         print(train_dataloader.dataset)
         print(len(train_dataloader.dataset))
 
-        _, valid_acc = trainer.train(train_dataloader, validate_dataloader)
+        _, valid_acc = trainer.train(
+            train_dataloader, validate_dataloader, feature
+        )
         valid_acc_list.append(valid_acc)
 
     model_name = f"{model_name}-{feature}-{torch.mean(torch.tensor(valid_acc_list)).item():.2f}-{datetime.now().isoformat()}.pt"

@@ -55,6 +55,18 @@ class PretrainedModel:
             self.model = timm.create_model(
                 "resnetv2_101x1_bitm", pretrained=True, num_classes=class_num,
             )
+        elif name == "deit":
+            self.model = torch.hub.load(
+                "facebookresearch/deit:main",
+                "deit_base_patch16_224",
+                pretrained=True,
+            )
+            self.model.head = torch.nn.Linear(
+                in_features=768, out_features=class_num, bias=True
+            )
+            torch.nn.init.xavier_normal_(self.model.head.weight)
+            stdv = 1.0 / math.sqrt(self.model.head.weight.size(1))
+            self.model.head.bias.data.uniform_(-stdv, stdv)
         elif name == "CaiT":
             # https://github.com/lucidrains/vit-pytorch
             self.model = CaiT(
