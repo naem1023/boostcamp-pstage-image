@@ -9,3 +9,5 @@ wandb/
 *.pth
 *.out
 .idea/
+config.py
+2_EDA.ipynb
