@@ -1,11 +1,11 @@
-test_dir = "/opt/ml/input/data/eval/images"
-train_dir = "/opt/ml/input/data/train/images"
+test_dir = "D:\\dev\\train\\eval\\images"
+train_dir = "D:\\dev\\train\\train\\images"
 
-test_csv = "/opt/ml/input/data/eval/info.csv"
-train_csv = "/opt/ml/input/data/train/train.csv"
-with_system_path_csv = "/opt/ml/code/train-with-system-path.csv"
+test_csv = "D:\\dev\\train\\eval\\info.csv"
+train_csv = "D:\\dev\\train\\train\\train.csv"
+with_system_path_csv = "D:\\dev\\boostcamp-pstage-image\\train-with-system-path.csv"
 
-model_dir = "/opt/ml/code/saved_model"
+model_dir = ".\\saved_model"
 BATCH_SIZE = 64
 
 NUM_EPOCH = 20

@@ -8,3 +8,4 @@ wandb/
 *.yml
 *.pth
 *.out
+.idea/
