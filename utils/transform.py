@@ -34,7 +34,7 @@ transformation = A.Compose(
         #     p=0.3,
         # ),
         A.RandomBrightnessContrast(p=0.8),
-        A.Rotate(limit=(-30, 30), p=0.3),
+        A.Rotate(limit=(-20, 20), p=0.4),
         A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225],),
         albumentations.pytorch.transforms.ToTensorV2(),
     ]

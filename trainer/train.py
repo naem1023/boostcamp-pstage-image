@@ -84,8 +84,8 @@ class BaseTrainer:
                     pred_label = torch.argmax(preds, dim=1)
 
                     # Append inferenced label and real label for f1 score
-                    pred_label_list.extend(pred_label.item())
-                    label_list.extend(labels)
+                    pred_label_list += pred_label.tolist()
+                    label_list += labels.tolist()
 
                     running_correct = (
                         torch.sum(pred_label == labels).item() / preds.shape[0]

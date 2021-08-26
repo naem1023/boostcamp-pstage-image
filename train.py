@@ -41,7 +41,7 @@ def train_worker(train_df, test_df):
 
 
 def main():
-    train_df = pd.read_csv(config.train_csv)
+    train_df = pd.read_csv(config.with_system_path_csv)
     test_df = pd.read_csv(config.test_csv)
 
     if config.ray_tune:
@@ -105,5 +105,4 @@ if __name__ == "__main__":
         train_df = pd.read_csv(config.train_csv)
         generate_csv(train_df, config.train_dir, config.with_system_path_csv)
     if args.split_train:
-        train_df = pd.read_csv(config.with_system_path_csv)
         main()
