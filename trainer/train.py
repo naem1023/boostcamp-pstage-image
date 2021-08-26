@@ -5,11 +5,11 @@ import wandb
 import config
 from sklearn.metrics import f1_score
 from ray import tune
-
+from .early_stopping import EarlyStopping
 
 class BaseTrainer:
     def __init__(
-        self, model, epochs, criterion, optimizer, device, batch_size,
+        self, model, epochs, criterion, optimizer, device, batch_size, model_dir, model_name
     ):
         self.model = model
         self.criterion = criterion
@@ -18,6 +18,8 @@ class BaseTrainer:
         self.device = device
         self.batch_size = batch_size
         self.start_epoch = 1
+        self.model_dir = model_dir
+        self.model_name = model_name
 
     def train(self, train_dataloader, validate_dataloader, feature, epoch):
         train_acc = self._forward(
@@ -29,8 +31,9 @@ class BaseTrainer:
         return train_acc, valid_acc
 
     def _forward(
-        self, dataloader, train=True, feature=None, epoch=config.NUM_EPOCH
+        self, dataloader, train=True, feature=None, epoch=config.NUM_EPOCH, patience=7
     ):
+        early_stopping = EarlyStopping(patience=patience, verbose=True, path=self.model_dir, feature=feature, model_name=self.model_name)
         for epoch in range(self.epochs):
             running_loss = 0.0
             running_acc = 0.0
@@ -60,6 +63,7 @@ class BaseTrainer:
                             config.model_name == "deit"
                             or config.model_name == "efficientnet-b4"
                             or config.model_name == "efficientnet-b7"
+                            or config.model_name == "resnet18"
                         ):
                             preds = torch.nn.functional.softmax(logits, dim=-1)
                             # finally get the index of the prediction with highest score
@@ -118,6 +122,13 @@ class BaseTrainer:
                         "val_f1_score": epoch_f1,
                     }
                 )
+            # Check loss
+            # If loss is decreased, save model.
+            early_stopping(epoch_f1, self.model)
+
+            if early_stopping.early_stop:
+                print('Early Stopping!!')
+                break
 
             print(
                 f"현재 epoch-{epoch}의 데이터 셋에서 평균 Loss : {epoch_loss:.3f}, 평균 Accuracy : {epoch_acc:.3f}"

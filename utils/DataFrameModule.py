@@ -24,11 +24,10 @@ def get_train_img_path(train_dir, img_path, feature=None):
                 path.append(result)
     elif feature == "mask":
         path = [
-            os.path.join(train_dir, f"{img_path}/{feature}{i}")
-            for i in range(1, 6)
+            os.path.join(train_dir, img_path, f'{feature}{i}') for i in range(1, 6)
         ]
     else:
-        path = os.path.join(train_dir, f"{img_path}/{feature}")
+        path = os.path.join(train_dir, img_path, feature)
     return path
 
 
@@ -83,7 +82,8 @@ class DataFrameModule:
         return target_path
 
 
-def generate_csv(train_pd, train_dir, file_path):
+def generate_csv(train_csv, train_dir, file_path):
+    train_pd = pd.read_csv(train_csv)
     train_df_manager = DataFrameModule(train_pd, train_dir)
     csv_file = train_df_manager.get_df_with_path()
     csv_file.to_csv(file_path)

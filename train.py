@@ -25,6 +25,7 @@ torch.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)
+os.environ['WANDB_API_KEY'] = config.wandb_api_key
 
 ray_config = {
     "batch_size": tune.choice([2, 4, 8, 16]),
@@ -33,8 +34,9 @@ ray_config = {
 
 
 def train_worker(train_df, test_df):
-    model_dir = os.path.join(config.model_dir, str(datetime.now().isoformat()))
-    os.mkdir(model_dir)
+    date = datetime.now().isoformat().replace(':', '-')
+    model_dir = os.path.join(config.model_dir, date)
+    os.makedirs(model_dir)
 
     for feature in config.features:
         feature_train(train_df, test_df, feature, config.model_name, model_dir)
@@ -102,7 +104,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.generate_path:
-        train_df = pd.read_csv(config.train_csv)
-        generate_csv(train_df, config.train_dir, config.with_system_path_csv)
+        generate_csv(config.train_csv, config.train_dir, config.with_system_path_csv)
     if args.split_train:
         main()

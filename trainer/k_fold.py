@@ -15,13 +15,16 @@ class KFoldTrainer:
         critertion,
         optimizer,
         device,
+        model_dir,
+        model_name
     ) -> None:
         self.k_split = k_split
         self.feature = feature
         self.epoch = epoch
         self.batch_size = batch_size
+        self.model_dir = model_dir
         self.trainer = BaseTrainer(
-            model, self.epoch, critertion, optimizer, device, self.batch_size,
+            model, self.epoch, critertion, optimizer, device, self.batch_size, self.model_dir, model_name
         )
 
     def train(self, train_dataset) -> list:

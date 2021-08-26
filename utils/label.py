@@ -11,7 +11,7 @@ age
     >=30 and <60: 1
     >=60: 2
 """
-
+import os
 
 class FileNameError(Exception):
     def __init__(self, msg):
@@ -34,7 +34,7 @@ class Label:
         return getattr(self, feature)
 
     def mask_feature(self, path) -> int:
-        file_name = path.split("/")[-1]
+        file_name = path.split(os.sep)[-1]
         if file_name[:4] == "mask":
             return 0
         elif file_name[:14] == "incorrect_mask":
@@ -45,7 +45,7 @@ class Label:
             raise FileNameError("Mask naming error")
 
     def gender_feature(self, path) -> int:
-        gender = path.split("/")[-2].split("_")[1]
+        gender = path.split(os.sep)[-2].split("_")[1]
         if gender == "male":
             return 0
         elif gender == "female":
@@ -54,7 +54,7 @@ class Label:
             raise FileNameError("Gender naming error")
 
     def age_feature(self, path) -> int:
-        age = int(path.split("/")[-2][-2:])
+        age = int(path.split(os.sep)[-2][-2:])
         if age < 30:
             return 0
         elif 30 <= age < 60:

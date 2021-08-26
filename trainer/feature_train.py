@@ -111,6 +111,8 @@ def feature_train(train_df, test_df, feature, model_name, model_dir):
             critertion,
             optimizer,
             device,
+            model_dir,
+            model_name
         )
         valid_acc_list = kt.train(train_dataset)
 

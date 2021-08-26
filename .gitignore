@@ -11,3 +11,4 @@ wandb/
 .idea/
 config.py
 2_EDA.ipynb
+data/
