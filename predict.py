@@ -39,7 +39,7 @@ def main():
             if feature in path:
                 break
         test_dataset = MaskDataset(
-            test_df, config.test_dir, transforms=transformation, train=False
+            test_df, config.test_dir, transforms=None, train=False
         )
 
         test_dataloader = DataLoader(
@@ -63,7 +63,8 @@ def main():
             result = predictor.predict(test_dataloader, feature)
             result_list.append(result)
         else:
-            model = PretrainedModel(config.model_name, len(Label.mask)).model
+            class_num = len(getattr(Label, feature))
+            model = PretrainedModel(config.model_name, class_num).model
             model.load_state_dict(torch.load(path))
 
             model.to(device)

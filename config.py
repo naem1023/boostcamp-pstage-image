@@ -8,8 +8,8 @@ with_system_path_csv = "/opt/ml/code/train-with-system-path.csv"
 model_dir = "/opt/ml/code/saved_model"
 BATCH_SIZE = 64
 
-NUM_EPOCH = 12
-k_split = 4
+NUM_EPOCH = 5
+k_split = 3
 model_name = "efficientnet-b4"
 ensemble = False
 if model_name == "deit":
@@ -17,8 +17,9 @@ if model_name == "deit":
 else:
     LEARNING_RATE = 0.001
 
-loss = "focal"
-predict_dir = "2021-08-26T18:30:15.071027"
+ray_tune = False
+loss = ["focal"]
+predict_dir = "2021-08-26T22:21:20.254632"
 features = [
     "mask",
     "gender",

@@ -21,6 +21,7 @@ class PretrainedModel:
     """
 
     def __init__(self, name, class_num) -> None:
+        print("class num =", class_num)
         if name == "resnet18":
             self.model = torchvision.models.resnet18(pretrained=True)
             self.model.fc = torch.nn.Linear(

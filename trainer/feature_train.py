@@ -1,5 +1,7 @@
 import torch
+from torch.nn.functional import embedding
 from torch.utils.data import DataLoader
+from pytorch_metric_learning import losses
 
 from torchensemble.bagging import BaggingClassifier
 from torchensemble.utils.logging import set_logger
@@ -31,13 +33,20 @@ def feature_train(train_df, test_df, feature, model_name, model_dir):
         train_df, config.train_dir, transforms=transformation, feature=feature,
     )
 
+    class_num = len(getattr(Label, feature))
+
     if config.loss == "crossentropy":
         critertion = torch.nn.CrossEntropyLoss()
     elif config.loss == "focal":
         critertion = FocalLoss()
+    elif config.loss == "ArcFaceLoss":
+        critertion = losses.ArcFaceLoss(
+            num_classes=class_num, embedding_size=class_num
+        )
 
     device = torch.device("cuda:0")
-    model = PretrainedModel(model_name, len(Label.mask)).model
+
+    model = PretrainedModel(model_name, class_num).model
     wandb.watch(model)
 
     optimizer = torch.optim.Adam(

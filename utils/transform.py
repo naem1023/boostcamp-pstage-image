@@ -1,5 +1,4 @@
 import albumentations as A
-from albumentations.augmentations.crops.transforms import CenterCrop
 import albumentations.pytorch
 
 transformation = A.Compose(

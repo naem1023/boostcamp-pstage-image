@@ -3,6 +3,8 @@ from tqdm import tqdm
 import torch
 import wandb
 import config
+from sklearn.metrics import f1_score
+from ray import tune
 
 
 class BaseTrainer:
@@ -32,6 +34,8 @@ class BaseTrainer:
         for epoch in range(self.epochs):
             running_loss = 0.0
             running_acc = 0.0
+            pred_label_list = []
+            label_list = []
 
             if train:
                 self.model.train()
@@ -77,9 +81,14 @@ class BaseTrainer:
 
                     # running_loss += loss.item() * images.size(0)
                     running_loss += loss.item()
+                    pred_label = torch.argmax(preds, dim=1)
+
+                    # Append inferenced label and real label for f1 score
+                    pred_label_list.extend(pred_label.item())
+                    label_list.extend(labels)
+
                     running_correct = (
-                        torch.sum(torch.argmax(preds, dim=1) == labels).item()
-                        / preds.shape[0]
+                        torch.sum(pred_label == labels).item() / preds.shape[0]
                     )
                     running_acc += running_correct
 
@@ -90,10 +99,25 @@ class BaseTrainer:
             epoch_loss = running_loss / len(dataloader)
             epoch_acc = running_acc / len(dataloader)
 
+            epoch_f1 = f1_score(label_list, pred_label_list, average="micro")
+            tune.report(loss=epoch_loss, accuracy=epoch_acc, f1_score=epoch_f1)
+
             if train:
-                wandb.log({"accuracy": epoch_acc, "loss": epoch_loss})
+                wandb.log(
+                    {
+                        "accuracy": epoch_acc,
+                        "loss": epoch_loss,
+                        "f1_score": epoch_f1,
+                    }
+                )
             else:
-                wandb.log({"val_acc": epoch_acc, "val_loss": epoch_loss})
+                wandb.log(
+                    {
+                        "val_acc": epoch_acc,
+                        "val_loss": epoch_loss,
+                        "val_f1_score": epoch_f1,
+                    }
+                )
 
             print(
                 f"현재 epoch-{epoch}의 데이터 셋에서 평균 Loss : {epoch_loss:.3f}, 평균 Accuracy : {epoch_acc:.3f}"
