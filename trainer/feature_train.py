@@ -6,13 +6,15 @@ from torchensemble.utils.logging import set_logger
 
 import os
 import wandb
-
+from datetime import datetime
 from utils import transformation
 from data_set import MaskDataset
 from model import PretrainedModel
 from utils import Label
 from . import k_fold
 import config
+
+from loss_set import FocalLoss
 
 
 def feature_train(train_df, test_df, feature, model_name, model_dir):
@@ -29,7 +31,10 @@ def feature_train(train_df, test_df, feature, model_name, model_dir):
         train_df, config.train_dir, transforms=transformation, feature=feature,
     )
 
-    critertion = torch.nn.CrossEntropyLoss()
+    if config.loss == "crossentropy":
+        critertion = torch.nn.CrossEntropyLoss()
+    elif config.loss == "focal":
+        critertion = FocalLoss()
 
     device = torch.device("cuda:0")
     model = PretrainedModel(model_name, len(Label.mask)).model

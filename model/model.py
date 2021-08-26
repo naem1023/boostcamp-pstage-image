@@ -38,7 +38,12 @@ class PretrainedModel:
             self.model = EfficientNet.from_pretrained(
                 "efficientnet-b4", num_classes=class_num
             )
-            self.reset_parameters(self.model._fc)
+            # self.reset_parameters(self.model._fc)
+        elif name == "efficientnet-b7":
+            self.model = EfficientNet.from_pretrained(
+                "efficientnet-b7", num_classes=class_num
+            )
+            # self.reset_parameters(self.model._fc)
         elif name == "volod3":
             self.model = volo.volo_d1()
             load_pretrained_weights(

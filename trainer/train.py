@@ -55,6 +55,7 @@ class BaseTrainer:
                         if (
                             config.model_name == "deit"
                             or config.model_name == "efficientnet-b4"
+                            or config.model_name == "efficientnet-b7"
                         ):
                             preds = torch.nn.functional.softmax(logits, dim=-1)
                             # finally get the index of the prediction with highest score
@@ -90,11 +91,9 @@ class BaseTrainer:
             epoch_acc = running_acc / len(dataloader)
 
             if train:
-                wandb.log({"accuracy": epoch_acc})
-                wandb.log({"loss": epoch_loss})
+                wandb.log({"accuracy": epoch_acc, "loss": epoch_loss})
             else:
-                wandb.log({"val_acc": epoch_acc})
-                wandb.log({"val_loss": epoch_loss})
+                wandb.log({"val_acc": epoch_acc, "val_loss": epoch_loss})
 
             print(
                 f"현재 epoch-{epoch}의 데이터 셋에서 평균 Loss : {epoch_loss:.3f}, 평균 Accuracy : {epoch_acc:.3f}"

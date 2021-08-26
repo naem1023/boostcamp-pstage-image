@@ -6,3 +6,4 @@ wandb/
 *.csv
 *.txt
 *.yml
+*.pth

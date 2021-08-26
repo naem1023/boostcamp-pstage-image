@@ -1,10 +1,14 @@
 import torch
 import pandas as pd
 import numpy as np
-from torch.utils.data import DataLoader
-from itertools import product
 
-from trainer import Trainer
+from torch.utils.data import DataLoader
+from torchensemble.bagging import BaggingClassifier
+from torchensemble.utils import io
+
+from itertools import product
+import os
+
 from data_set import MaskDataset
 from utils import transformation
 from model import PretrainedModel
@@ -17,7 +21,15 @@ import glob
 
 
 def main():
-    model_path = glob.glob(config.model_dir + f"/{config.model_name}*.pt")
+    if config.ensemble:
+        model_path = [
+            os.path.join(config.model_dir, feature)
+            for feature in config.features
+        ]
+    else:
+        model_path = glob.glob(
+            os.path.join(config.model_dir, config.predict_dir, "*.pt")
+        )
     print(model_path)
     test_df = pd.read_csv(config.test_csv)
 
@@ -35,16 +47,32 @@ def main():
         )
 
         device = torch.device("cuda:0")
-        model = PretrainedModel(config.model_name, len(Label.mask)).model
-        model.load_state_dict(torch.load(path))
+        if config.ensemble:
+            model = PretrainedModel(config.model_name, len(Label.mask)).model
+            ensemble_model = BaggingClassifier(
+                estimator=model, n_estimators=10, cuda=True,
+            )
+            io.load(ensemble_model, path)
+            predictor = Predictor(
+                ensemble_model,
+                config.NUM_EPOCH,
+                device,
+                config.BATCH_SIZE,
+                ensemble=True,
+            )
+            result = predictor.predict(test_dataloader, feature)
+            result_list.append(result)
+        else:
+            model = PretrainedModel(config.model_name, len(Label.mask)).model
+            model.load_state_dict(torch.load(path))
 
-        model.to(device)
-        predictor = Predictor(
-            model, config.NUM_EPOCH, device, config.BATCH_SIZE,
-        )
+            model.to(device)
+            predictor = Predictor(
+                model, config.NUM_EPOCH, device, config.BATCH_SIZE,
+            )
 
-        result = predictor.predict(test_dataloader, feature)
-        result_list.append(result)
+            result = predictor.predict(test_dataloader, feature)
+            result_list.append(result)
 
     predict(result_list)
 
