@@ -6,7 +6,6 @@ from torchensemble.utils.logging import set_logger
 
 import os
 import wandb
-from datetime import datetime
 
 from utils import transformation
 from data_set import MaskDataset
@@ -16,7 +15,7 @@ from . import k_fold
 import config
 
 
-def feature_train(train_df, test_df, feature, model_name):
+def feature_train(train_df, test_df, feature, model_name, model_dir):
     print(f"{feature}, {model_name}")
     run = wandb.init(
         project="aistage-mask", entity="naem1023", tags=[feature, model_name]
@@ -26,8 +25,6 @@ def feature_train(train_df, test_df, feature, model_name):
     wandb.config.epoch = config.NUM_EPOCH
     wandb.config.k_fold = config.k_split
 
-    model_dir = os.path.join(config.model_dir, str(datetime.now().isoformat()))
-    os.mkdir(model_dir)
     train_dataset = MaskDataset(
         train_df, config.train_dir, transforms=transformation, feature=feature,
     )

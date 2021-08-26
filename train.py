@@ -1,7 +1,8 @@
 import argparse
 import pandas as pd
 import numpy as np
-import wandb
+import os
+from datetime import datetime
 
 from torchvision import transforms
 from torchvision.transforms import Resize, ToTensor, Normalize
@@ -22,9 +23,13 @@ np.random.seed(SEED)
 
 
 def main(feature_split, train_df, test_df):
+    model_dir = os.path.join(config.model_dir, str(datetime.now().isoformat()))
+    os.mkdir(model_dir)
     if feature_split:
         for feature in config.features:
-            feature_train(train_df, test_df, feature, config.model_name)
+            feature_train(
+                train_df, test_df, feature, config.model_name, model_dir
+            )
 
 
 if __name__ == "__main__":
