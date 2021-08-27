@@ -9,7 +9,7 @@ from torchensemble.utils.logging import set_logger
 import os
 import wandb
 from datetime import datetime
-from utils import transformation
+
 from data_set import MaskDataset
 from model import PretrainedModel
 from utils import Label
@@ -21,7 +21,7 @@ def feature_train(train_df, test_df, feature, model_name, model_dir):
     print(f"{feature}, {model_name}")
 
     train_dataset = MaskDataset(
-        train_df, config.train_dir, transforms=transformation, feature=feature,
+        train_df, config.train_dir, feature=feature,
     )
 
     class_num = len(getattr(Label, feature))

@@ -46,7 +46,11 @@ class BaseTrainer:
             running_loss = 0.0
             running_acc = 0.0
             pred_target_list = []
-            target_list = []
+            if self.config['cut_mix']:
+                target_list = [[], []]
+                sum_f1_score = 0.0
+            else:
+                target_list = []
 
             print(f"{self.config['feature']}: Epoch {epoch}")
             with tqdm(train_dataloader, unit="batch") as tepoch:
@@ -58,8 +62,8 @@ class BaseTrainer:
                     if isinstance(targets, (tuple, list)):
                         targets1, targets2, lam = targets
                         targets = (targets1.to(self.device), targets2.to(self.device), lam)
-                        target_list += targets[0].tolist()
-                        target_list += targets[1].tolist()
+                        target_list[0] += targets[0].tolist()
+                        target_list[1] += targets[1].tolist()
                     # Normal
                     else:
                         targets = targets.to(self.device)
@@ -93,7 +97,6 @@ class BaseTrainer:
                         correct2 = pred_target.eq(targets2).sum().item()
                         accuracy = (lam * correct1 + (1 - lam) * correct2) / num
                         pred_target_list += pred_target.tolist()
-                        pred_target_list += pred_target.tolist()
                     else:
                         correct_ = pred_target.eq(targets).sum().item()
                         accuracy = correct_ / num
@@ -106,14 +109,18 @@ class BaseTrainer:
                         loss=loss.item(), accuracy=accuracy
                     )
 
+                    if self.config['cut_mix']:
+                        sum_f1_score += f1_score(target_list[0], pred_target_list, average="macro") * lam + \
+                            f1_score(target_list[1], pred_target_list, average="macro") * (1 - lam)
+
             ##################
             # validation
+            running_val_loss = 0.0
+            running_val_acc = 0.0
+            val_pred_target_list = []
+            val_target_list = []
             with torch.no_grad():
                 self.model.eval()
-                running_val_loss = 0.0
-                running_val_acc = 0.0
-                val_pred_target_list = []
-                val_target_list = []
 
                 with tqdm(val_dataloader, unit="batch") as tepoch:
                     for ind, (images, targets) in enumerate(tepoch):
@@ -160,7 +167,10 @@ class BaseTrainer:
             epoch_val_loss = running_val_loss / len(val_dataloader)
             epoch_val_acc = running_val_acc / len(val_dataloader)
 
-            epoch_f1 = f1_score(target_list, pred_target_list, average="macro")
+            if self.config['cut_mix']:
+                epoch_f1 = sum_f1_score / images.size(0)
+            else:
+                epoch_f1 = f1_score(target_list, pred_target_list, average="macro")
             epoch_val_f1 = f1_score(val_target_list, val_pred_target_list, average="macro")
 
             if config.ray_tune:

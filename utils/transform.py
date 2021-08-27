@@ -1,6 +1,16 @@
 import albumentations as A
 import albumentations.pytorch
 
+test_transformation = A.Compose(
+    [
+        A.CenterCrop(300, 256, p=1),
+        # A.Resize(224, 224),
+        A.Normalize(
+            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225],
+        ),
+        albumentations.pytorch.transforms.ToTensorV2(),
+    ]
+)
 transformation = A.Compose(
     [
         # A.Resize(224, 224),
@@ -36,7 +46,7 @@ transformation = A.Compose(
         A.ColorJitter(p=0.5),
         A.RandomBrightnessContrast(p=0.8),
         A.Rotate(limit=(-20, 20), p=0.4),
-        A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225],),
+        A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], ),
         albumentations.pytorch.transforms.ToTensorV2(),
     ]
 )

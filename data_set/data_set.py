@@ -8,6 +8,7 @@ import torch
 import albumentations as A
 import albumentations.pytorch
 
+from utils import test_transformation
 
 class MaskDataset(Dataset):
     def __init__(
@@ -27,16 +28,7 @@ class MaskDataset(Dataset):
             self.data_df = get_test_img_path(self.data_df, self.image_dir)
 
         if self.transforms is None:
-            self.transforms = A.Compose(
-                [
-                    # A.CenterCrop(300, 300, p=1),
-                    A.Resize(224, 224),
-                    A.Normalize(
-                        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225],
-                    ),
-                    albumentations.pytorch.transforms.ToTensorV2(),
-                ]
-            )
+            self.transforms = test_transformation
 
     def __len__(self):
         if isinstance(self.data_df, list):

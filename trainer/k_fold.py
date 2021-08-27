@@ -8,7 +8,7 @@ from loss_set import CutMixCollator, CutMixCriterion
 
 from loss_set import get_loss
 
-
+from utils import test_transformation
 class KFoldTrainer:
     def __init__(self,model_config) -> None:
         self.config = model_config
@@ -24,6 +24,7 @@ class KFoldTrainer:
         test_size = len(dataset) - train_size
 
         train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
+        test_dataset.transforms = test_transformation
 
         train_dataloader = DataLoader(
             dataset=train_dataset,
