@@ -6,7 +6,7 @@ import wandb
 
 class EarlyStopping:
     """주어진 patience 이후로 지표가 개선되지 않으면 학습을 조기 중지"""
-    def __init__(self, patience=7, verbose=False, delta=0.02, path='.' + os.sep, check='max', feature=None, model_name=''):
+    def __init__(self, patience=7, verbose=False, delta=0.005, path='.' + os.sep, check='max', feature=None, model_name=''):
         """
         Args:
             patience (int): 지표가 개선된 후 기다리는 기간
@@ -26,9 +26,9 @@ class EarlyStopping:
         self.early_stop = False
         self.check = check
         if self.check == 'max':
-            self.val_check = np.Inf
-        elif self.check == 'min':
             self.val_check = -np.Inf
+        elif self.check == 'min':
+            self.val_check = np.Inf
         self.delta = delta
         self.path = path
         self.feature = feature
@@ -47,13 +47,15 @@ class EarlyStopping:
                 return False
 
     def __call__(self, val, model):
-
-        score = -val
+        if self.check == 'max':
+            score = val
+        elif self.check == 'min':
+            score = -val
 
         if self.best_score is None:
             self.best_score = score
             self.save_checkpoint(val, model)
-        elif self.check_val(score):
+        elif not self.check_val(score):
             self.counter += 1
             print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
             if self.counter >= self.patience:

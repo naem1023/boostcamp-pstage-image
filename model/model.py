@@ -4,6 +4,8 @@ import math
 
 import torchvision
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from efficientnet_pytorch import EfficientNet
 
 from vit_pytorch import ViT
@@ -13,6 +15,35 @@ import timm
 from model import volo
 from tlt.utils import load_pretrained_weights
 
+class BaseModel(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=7, stride=1)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=1)
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=1)
+        self.dropout1 = nn.Dropout(0.25)
+        self.dropout2 = nn.Dropout(0.25)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(128, num_classes)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = F.relu(x)
+
+        x = self.conv2(x)
+        x = F.relu(x)
+        x = F.max_pool2d(x, 2)
+        x = self.dropout1(x)
+
+        x = self.conv3(x)
+        x = F.relu(x)
+        x = F.max_pool2d(x, 2)
+        x = self.dropout2(x)
+
+        x = self.avgpool(x)
+        x = x.view(-1, 128)
+        return self.fc(x)
 
 class PretrainedModel:
     """
@@ -23,7 +54,10 @@ class PretrainedModel:
     def __init__(self, name, class_num) -> None:
         self.name = name
         print("class num =", class_num)
-        if name == "resnet18":
+        if name == 'test':
+            self.model = BaseModel(class_num)
+
+        elif name == "resnet18":
             self.model = torchvision.models.resnet18(pretrained=True)
             self.model.fc = torch.nn.Linear(
                 in_features=512, out_features=class_num, bias=True

@@ -18,7 +18,7 @@ class BaseTrainer:
         self.criterion = self.config['criterion']
         self.scheduler = self.config['scheduler']
         if self.config['cut_mix']:
-            self.val_criterion = get_loss('crossentropy', cutmix=False)
+            self.val_criterion = get_loss('focal', cutmix=False)
 
     def train(self, train_dataloader, val_dataloader):
         self._forward(train_dataloader, val_dataloader)
@@ -34,7 +34,7 @@ class BaseTrainer:
         wandb.config.k_fold = config.k_split
         wandb.watch(self.model)
 
-        self.model.train()
+
 
         early_stopping = EarlyStopping(
             patience=patience, verbose=True, path=self.config['model_dir'], feature=self.config['feature'],
@@ -42,14 +42,16 @@ class BaseTrainer:
         )
 
         for epoch in range(self.config['epoch']):
+            self.model.train()
             running_loss = 0.0
             running_acc = 0.0
             pred_target_list = []
             target_list = []
 
+            print(f"{self.config['feature']}: Epoch {epoch}")
             with tqdm(train_dataloader, unit="batch") as tepoch:
                 for ind, (images, targets) in enumerate(tepoch):
-                    tepoch.set_description(f"{self.config['feature']}: Epoch {epoch}")
+                    tepoch.set_description(f"{self.config['feature']}{epoch}")
                     images = images.to(self.device)
 
                     # CutMix
@@ -67,11 +69,11 @@ class BaseTrainer:
 
                     logits = self.model(images)
 
-                    if self.config['model_name'] in ["deit","efficientnet-b4","efficientnet-b7","resnet18","mobilenetv2"]:
+                    if self.config['model_name'] in ["BiT", "deit","efficientnet-b4","efficientnet-b7","resnet18","mobilenetv2",'test']:
                         preds = torch.nn.functional.softmax(logits, dim=-1)
                         # finally get the index of the prediction with highest score
                         # topk_scores, preds = torch.topk(scores, k=1, dim=-1)
-                    elif self.config['model_name'] in ["BiT", "volo", "CaiT"]:
+                    elif self.config['model_name'] in ["volo", "CaiT"]:
                         preds = torch.argmax(logits, dim=1)
                     else:
                         _, preds = torch.max(logits, 1)
@@ -100,6 +102,10 @@ class BaseTrainer:
 
                     running_acc += accuracy
 
+                    tepoch.set_postfix(
+                        loss=loss.item(), accuracy=accuracy
+                    )
+
             ##################
             # validation
             with torch.no_grad():
@@ -111,6 +117,8 @@ class BaseTrainer:
 
                 with tqdm(val_dataloader, unit="batch") as tepoch:
                     for ind, (images, targets) in enumerate(tepoch):
+                        tepoch.set_description(f"val{epoch}")
+
                         images = images.to(self.device)
 
                         targets = targets.to(self.device)
@@ -118,11 +126,11 @@ class BaseTrainer:
 
                         logits = self.model(images)
 
-                        if self.config['model_name'] == ["deit", "efficientnet-b4", "efficientnet-b7", "resnet18","mobilenetv2"]:
+                        if self.config['model_name'] in ["BiT", "deit", "efficientnet-b4", "efficientnet-b7", "resnet18","mobilenetv2"]:
                             preds = torch.nn.functional.softmax(logits, dim=-1)
                             # finally get the index of the prediction with highest score
                             # topk_scores, preds = torch.topk(scores, k=1, dim=-1)
-                        elif self.config['model_name'] == ["BiT", "volo", "CaiT"]:
+                        elif self.config['model_name'] in ["volo", "CaiT"]:
                             preds = torch.argmax(logits, dim=1)
                         else:
                             _, preds = torch.max(logits, 1)
@@ -142,9 +150,9 @@ class BaseTrainer:
 
                         running_val_acc += accuracy
 
-            tepoch.set_postfix(
-                loss=loss.item(), accuracy=accuracy
-            )
+                        tepoch.set_postfix(
+                            loss=val_loss.item(), accuracy=accuracy
+                        )
 
             epoch_loss = running_loss / len(train_dataloader)
             epoch_acc = running_acc / len(train_dataloader)
@@ -158,6 +166,7 @@ class BaseTrainer:
             if config.ray_tune:
                 tune.report(loss=epoch_loss, accuracy=epoch_acc, f1_score=epoch_f1)
 
+
             wandb.log({
                 "accuracy": epoch_acc,
                 "loss": epoch_loss,
@@ -165,18 +174,19 @@ class BaseTrainer:
                 "val_acc": epoch_val_acc,
                 "val_loss": epoch_val_loss,
                 "val_f1_score": epoch_val_f1,
+                'learning_rate': self.optimizer.param_groups[0]['lr']
             })
-            # Check loss
-            # If loss is decreased, save model.
-            early_stopping(epoch_val_f1, self.model)
+            if epoch > self.config['epoch'] // 2:
+                # Check loss
+                # If loss is decreased, save model.
+                early_stopping(epoch_val_f1, self.model)
 
-            if early_stopping.early_stop:
-                print('Early Stopping!!')
-                break
+                if early_stopping.early_stop:
+                    print('Early Stopping!!')
+                    break
 
             print(
                 f"epoch-{epoch} val loss: {epoch_val_loss:.3f}, val acc: {epoch_val_acc:.3f}, val_f1_score: {epoch_val_f1:.3f}"
             )
 
         run.finish()
-        return epoch_acc

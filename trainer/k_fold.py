@@ -38,7 +38,7 @@ class KFoldTrainer:
             num_workers=4,
         )
 
-        _, valid_acc = self.trainer.train(train_dataloader, test_dataloader)
+        self.trainer.train(train_dataloader, test_dataloader)
 
     def validate(self, test_dataset) -> list:
         valid_acc_list = []

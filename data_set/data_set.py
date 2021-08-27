@@ -29,7 +29,8 @@ class MaskDataset(Dataset):
         if self.transforms is None:
             self.transforms = A.Compose(
                 [
-                    A.CenterCrop(300, 300, p=1),
+                    # A.CenterCrop(300, 300, p=1),
+                    A.Resize(224, 224),
                     A.Normalize(
                         mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225],
                     ),
