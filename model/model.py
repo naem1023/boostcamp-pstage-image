@@ -37,6 +37,7 @@ class PretrainedModel:
             self.init_weight()
         elif name == "mobilenetv2":
             self.model = timm.create_model('mobilenetv2_100', pretrained=True)
+            # print(self.model)
             self.model.classifier = torch.nn.Linear(
                 in_features=1280, out_features=class_num, bias=True
             )

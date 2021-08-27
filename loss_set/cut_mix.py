@@ -44,5 +44,4 @@ class CutMixCriterion:
 
     def __call__(self, preds, targets):
         targets1, targets2, lam = targets
-        return lam * self.criterion(
-            preds, targets1) + (1 - lam) * self.criterion(preds, targets2)
+        return lam * self.criterion(preds, targets1) + (1 - lam) * self.criterion(preds, targets2)

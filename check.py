@@ -6,7 +6,7 @@ import config
 from sklearn.metrics import f1_score
 
 def main():
-    my_df = pd.read_csv("efficientnet-b4-2021-08-27_210844-submission.csv")
+    my_df = pd.read_csv("mobilenetv2-2021-08-28_033707-submission.csv")
     answer_df = pd.read_csv("answer.csv")
 
     print(answer_df.iloc[:5, -1].to_numpy())
