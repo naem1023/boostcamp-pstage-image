@@ -98,7 +98,7 @@ def predict(result):
         pred_class = label_number.index(
             (result[0][i][1], result[1][i][1], result[2][i][1])
         )
-        submission.append([path, pred_class])
+        submission.append([path.split(os.sep)[-1], pred_class])
     result_df = pd.DataFrame.from_records(
         submission, columns=["ImageID", "ans"]
     )

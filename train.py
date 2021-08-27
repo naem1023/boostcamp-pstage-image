@@ -18,13 +18,10 @@ from trainer import feature_train
 from ray import tune
 from ray.tune import CLIReporter
 from ray.tune.schedulers import ASHAScheduler
+import random
+import torch.backends.cudnn as cudnn
 
-# fix random seeds for reproducibility
-SEED = 12342
-torch.manual_seed(SEED)
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-np.random.seed(SEED)
+
 os.environ['WANDB_API_KEY'] = config.wandb_api_key
 
 ray_config = {

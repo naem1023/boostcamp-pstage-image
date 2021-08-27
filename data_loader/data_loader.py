@@ -1,7 +1,7 @@
 from torch.utils.data import DataLoader
 
 
-class MaskDataLoader(DatLoader):
+class MaskDataLoader(DataLoader):
     def __init__(self) -> None:
         super().__init__()
 

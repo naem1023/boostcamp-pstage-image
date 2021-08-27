@@ -15,8 +15,9 @@ from model import PretrainedModel
 from utils import Label
 from . import k_fold
 import config
+from data_loader import CutMixCriterion
 
-from loss_set import FocalLoss
+from loss_set import FocalLoss, get_loss
 
 
 def feature_train(train_df, test_df, feature, model_name, model_dir):
@@ -28,16 +29,7 @@ def feature_train(train_df, test_df, feature, model_name, model_dir):
     )
 
     class_num = len(getattr(Label, feature))
-
-    if config.loss == "crossentropy":
-        critertion = torch.nn.CrossEntropyLoss()
-    elif config.loss == "focal":
-        critertion = FocalLoss()
-    elif config.loss == "ArcFaceLoss":
-        critertion = losses.ArcFaceLoss(
-            num_classes=class_num, embedding_size=class_num
-        )
-
+    critertion = get_loss(config.model_name, config.cutmix)
     device = torch.device("cuda:0")
 
     model = PretrainedModel(model_name, class_num).model
@@ -105,7 +97,8 @@ def feature_train(train_df, test_df, feature, model_name, model_dir):
             optimizer,
             device,
             model_dir,
-            model_name
+            model_name,
+            config.cutmix, config.cutmix_alpha
         )
         valid_acc_list = kt.train(train_dataset)
 

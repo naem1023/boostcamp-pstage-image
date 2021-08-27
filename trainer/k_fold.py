@@ -2,7 +2,7 @@ from sklearn.model_selection import KFold
 import torch
 from torch.utils.data import DataLoader
 from trainer import BaseTrainer
-
+from data_loader import CutMixCollator, CutMixCriterion
 
 class KFoldTrainer:
     def __init__(
@@ -16,15 +16,19 @@ class KFoldTrainer:
         optimizer,
         device,
         model_dir,
-        model_name
+        model_name,
+        cutmix, cutmix_alpha=0
     ) -> None:
         self.k_split = k_split
         self.feature = feature
         self.epoch = epoch
         self.batch_size = batch_size
+        self.criterion = critertion
         self.model_dir = model_dir
+        self.cutmix = cutmix
+        self.cutmix_alpha = cutmix_alpha
         self.trainer = BaseTrainer(
-            model, self.epoch, critertion, optimizer, device, self.batch_size, self.model_dir, model_name
+            model, self.epoch, self.criterion, optimizer, device, self.batch_size, self.model_dir, model_name
         )
 
     def train(self, train_dataset) -> list:
@@ -33,6 +37,11 @@ class KFoldTrainer:
         for fold, (train_idx, validate_idx) in enumerate(
             kfold.split(train_dataset)
         ):
+            if self.cutmix:
+                collator = CutMixCollator(self.cutmix_alpha)
+            else:
+                collator = torch.utils.data.dataloader.default_collate
+
             train_subsampler = torch.utils.data.SubsetRandomSampler(train_idx)
             validate_subsampler = torch.utils.data.SubsetRandomSampler(
                 validate_idx
@@ -44,6 +53,7 @@ class KFoldTrainer:
                 batch_size=self.batch_size,
                 sampler=train_subsampler,
                 num_workers=4,
+                collate_fn=collator,
             )
             validate_dataloader = DataLoader(
                 dataset=train_dataset,

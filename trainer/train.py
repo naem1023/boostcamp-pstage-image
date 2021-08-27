@@ -6,28 +6,31 @@ import config
 from sklearn.metrics import f1_score
 from ray import tune
 from .early_stopping import EarlyStopping
-
+from loss_set import get_loss
 class BaseTrainer:
     def __init__(
         self, model, epochs, criterion, optimizer, device, batch_size, model_dir, model_name
     ):
         self.model = model
         self.criterion = criterion
-        self.optimizer = optimizer
         self.epochs = epochs
         self.device = device
         self.batch_size = batch_size
         self.start_epoch = 1
         self.model_dir = model_dir
         self.model_name = model_name
+        self.optimizer = optimizer
 
     def train(self, train_dataloader, validate_dataloader, feature, epoch):
         train_acc = self._forward(
             train_dataloader, feature=feature, epoch=epoch
         )
+        prev_optim = self.optimizer
+        self.optimizer = get_loss('crossentropy', cutmix=False)
         valid_acc = self._forward(
             validate_dataloader, train=False, feature=feature, epoch=epoch
         )
+        self.optimizer = prev_optim
         return train_acc, valid_acc
 
     def _forward(
@@ -57,16 +60,23 @@ class BaseTrainer:
         for epoch in range(self.epochs):
             running_loss = 0.0
             running_acc = 0.0
-            pred_label_list = []
-            label_list = []
+            pred_target_list = []
+            target_list = []
 
             with tqdm(dataloader, unit="batch") as tepoch:
                 len(dataloader)
-                for ind, (images, labels) in enumerate(tepoch):
+                for ind, (images, targets) in enumerate(tepoch):
                     tepoch.set_description(f"{feature}, Epoch {epoch}")
                     images = images.to(self.device)
 
-                    labels = labels.to(self.device)
+                    if train and isinstance(targets, (tuple, list)):
+                        targets1, targets2, lam = targets
+                        targets = (targets1.to(self.device), targets2.to(self.device), lam)
+                        target_list += targets[0].tolist()
+                        target_list += targets[1].tolist()
+                    else:
+                        targets = targets.to(self.device)
+                        target_list += targets.tolist()
 
                     if train:
                         self.optimizer.zero_grad()
@@ -93,33 +103,42 @@ class BaseTrainer:
                         else:
                             _, preds = torch.max(logits, 1)
 
-                        loss = self.criterion(preds, labels)
-
+                        loss = self.criterion(preds, targets)
                         if train:
                             loss.backward()
                             self.optimizer.step()
 
-                    # running_loss += loss.item() * images.size(0)
-                    running_loss += loss.item()
-                    pred_label = torch.argmax(preds, dim=1)
+                        running_loss += loss.item()
+
+                    pred_target = torch.argmax(preds, dim=1)
+                    num = images.size(0)
+                    if train and isinstance(targets, (tuple, list)):
+                        targets1, targets2, lam = targets
+                        correct1 = pred_target.eq(targets1).sum().item()
+                        correct2 = pred_target.eq(targets2).sum().item()
+                        accuracy = (lam * correct1 + (1 - lam) * correct2) / num
+                    else:
+                        correct_ = pred_target.eq(targets).sum().item()
+                        accuracy = correct_ / num
+                        # running_correct = (
+                        #         torch.sum(pred_label == targets).item() / preds.shape[0]
+                        # )
 
                     # Append inferenced label and real label for f1 score
-                    pred_label_list += pred_label.tolist()
-                    label_list += labels.tolist()
+                    pred_target_list += pred_target.tolist()
+                    pred_target_list += pred_target.tolist()
 
-                    running_correct = (
-                        torch.sum(pred_label == labels).item() / preds.shape[0]
-                    )
-                    running_acc += running_correct
+
+                    running_acc += accuracy
 
                     tepoch.set_postfix(
-                        loss=loss.item(), accuracy=running_correct
+                        loss=loss.item(), accuracy=accuracy
                     )
 
             epoch_loss = running_loss / len(dataloader)
             epoch_acc = running_acc / len(dataloader)
 
-            epoch_f1 = f1_score(label_list, pred_label_list, average="micro")
+            epoch_f1 = f1_score(target_list, pred_target_list, average="macro")
             if config.ray_tune:
                 tune.report(loss=epoch_loss, accuracy=epoch_acc, f1_score=epoch_f1)
 
@@ -151,6 +170,7 @@ class BaseTrainer:
             print(
                 f"epoch-{epoch} Avg Loss: {epoch_loss:.3f}, Avg Accuracy: {epoch_acc:.3f}, f1_score: {epoch_f1:.3f}"
             )
+
         run.finish()
         return epoch_acc
 
