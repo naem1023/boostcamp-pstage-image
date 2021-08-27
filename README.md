@@ -1,5 +1,16 @@
 # Image Classification
 Testing many method of CNN, Ensemble and creating simple MLops.
+- Model
+    - ResNet18
+    - EfficientNet-b4, b7
+    - ViT
+    - BiT
+    - CaiT
+    - Volo
+    
+- Ensemble
+    - Bagging
+    - Voting
 
 ## Requirement
 ```shell
@@ -43,6 +54,9 @@ wandb_api_key = ''
 
 ## Run
 ```shell
+# generate train csv file
 python train.py -g-path
+
+# train
 python train.py
 ```

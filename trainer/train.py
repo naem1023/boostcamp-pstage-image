@@ -33,17 +33,32 @@ class BaseTrainer:
     def _forward(
         self, dataloader, train=True, feature=None, epoch=config.NUM_EPOCH, patience=7
     ):
-        early_stopping = EarlyStopping(patience=patience, verbose=True, path=self.model_dir, feature=feature, model_name=self.model_name)
+        if train:
+            train_tag = 'training'
+        else:
+            train_tag = 'validation'
+
+        run = wandb.init(
+            project="aistage-mask", entity="naem1023", tags=[feature, self.model_name, train_tag]
+        )
+        wandb.config.learning_rate = config.LEARNING_RATE
+        wandb.config.batch_size = config.BATCH_SIZE
+        wandb.config.epoch = config.NUM_EPOCH
+        wandb.config.k_fold = config.k_split
+        wandb.watch(self.model)
+
+        if train:
+            self.model.train()
+            early_stopping = EarlyStopping(patience=patience, verbose=True, path=self.model_dir, feature=feature,
+                                           model_name=self.model_name)
+        else:
+            self.model.eval()
+
         for epoch in range(self.epochs):
             running_loss = 0.0
             running_acc = 0.0
             pred_label_list = []
             label_list = []
-
-            if train:
-                self.model.train()
-            else:
-                self.model.eval()
 
             with tqdm(dataloader, unit="batch") as tepoch:
                 len(dataloader)
@@ -134,5 +149,6 @@ class BaseTrainer:
             print(
                 f"epoch-{epoch} Avg Loss: {epoch_loss:.3f}, Avg Accuracy: {epoch_acc:.3f}, f1_score: {epoch_f1:.3f}"
             )
+        run.finish()
         return epoch_acc
 
