@@ -6,7 +6,7 @@ import wandb
 
 class EarlyStopping:
     """주어진 patience 이후로 지표가 개선되지 않으면 학습을 조기 중지"""
-    def __init__(self, patience=7, verbose=False, delta=0, path='.' + os.sep, check='max', feature=None, model_name=''):
+    def __init__(self, patience=7, verbose=False, delta=0.02, path='.' + os.sep, check='max', feature=None, model_name=''):
         """
         Args:
             patience (int): 지표가 개선된 후 기다리는 기간
@@ -65,9 +65,8 @@ class EarlyStopping:
 
     def save_checkpoint(self, val, model):
         '''validation 지표가 개선되면 모델을 저장한다.'''
-        date = datetime.now().isoformat().replace(':', '-')
-        model_name = f"{self.model_name}-{self.feature}-{wandb.run.name}-{val:.2f}-{date}.pt"
+        model_name = f"{self.model_name}-{self.feature}-{wandb.run.name}-.pt"
         if self.verbose:
             print(f'Good training! ({self.val_check:.6f} --> {val:.6f}).  Saving model ...')
-        torch.save(model.state_dict(), self.path)
+        torch.save(model.state_dict(), os.path.join(self.path, model_name))
         self.val_check = val

@@ -97,14 +97,15 @@ class BaseTrainer:
                     running_acc += running_correct
 
                     tepoch.set_postfix(
-                        loss=loss.item(), accuracy=running_correct,
+                        loss=loss.item(), accuracy=running_correct
                     )
 
             epoch_loss = running_loss / len(dataloader)
             epoch_acc = running_acc / len(dataloader)
 
             epoch_f1 = f1_score(label_list, pred_label_list, average="micro")
-            tune.report(loss=epoch_loss, accuracy=epoch_acc, f1_score=epoch_f1)
+            if config.ray_tune:
+                tune.report(loss=epoch_loss, accuracy=epoch_acc, f1_score=epoch_f1)
 
             if train:
                 wandb.log(
@@ -131,7 +132,7 @@ class BaseTrainer:
                 break
 
             print(
-                f"현재 epoch-{epoch}의 데이터 셋에서 평균 Loss : {epoch_loss:.3f}, 평균 Accuracy : {epoch_acc:.3f}"
+                f"epoch-{epoch} Avg Loss: {epoch_loss:.3f}, Avg Accuracy: {epoch_acc:.3f}, f1_score: {epoch_f1:.3f}"
             )
         return epoch_acc
 

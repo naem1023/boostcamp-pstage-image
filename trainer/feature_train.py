@@ -116,7 +116,7 @@ def feature_train(train_df, test_df, feature, model_name, model_dir):
         )
         valid_acc_list = kt.train(train_dataset)
 
-        model_name = f"{model_name}-{feature}-{wandb.run.name}-{torch.mean(torch.tensor(valid_acc_list)).item():.2f}-{datetime.now().isoformat()}.pt"
-        torch.save(model.state_dict(), os.path.join(model_dir, model_name))
+        # model_name = f"{model_name}-{feature}-{wandb.run.name}-{torch.mean(torch.tensor(valid_acc_list)).item():.2f}-{datetime.now().isoformat()}.pt"
+        # torch.save(model.state_dict(), os.path.join(model_dir, model_name))
 
     run.finish()
