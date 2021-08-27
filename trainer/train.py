@@ -25,12 +25,12 @@ class BaseTrainer:
         train_acc = self._forward(
             train_dataloader, feature=feature, epoch=epoch
         )
-        prev_optim = self.optimizer
-        self.optimizer = get_loss('crossentropy', cutmix=False)
+        prev_critertion = self.optimizer
+        self.criterion = get_loss('crossentropy', cutmix=False)
         valid_acc = self._forward(
             validate_dataloader, train=False, feature=feature, epoch=epoch
         )
-        self.optimizer = prev_optim
+        self.criterion = prev_critertion
         return train_acc, valid_acc
 
     def _forward(
@@ -117,6 +117,8 @@ class BaseTrainer:
                         correct1 = pred_target.eq(targets1).sum().item()
                         correct2 = pred_target.eq(targets2).sum().item()
                         accuracy = (lam * correct1 + (1 - lam) * correct2) / num
+                        pred_target_list += pred_target.tolist()
+                        pred_target_list += pred_target.tolist()
                     else:
                         correct_ = pred_target.eq(targets).sum().item()
                         accuracy = correct_ / num
@@ -124,9 +126,9 @@ class BaseTrainer:
                         #         torch.sum(pred_label == targets).item() / preds.shape[0]
                         # )
 
-                    # Append inferenced label and real label for f1 score
-                    pred_target_list += pred_target.tolist()
-                    pred_target_list += pred_target.tolist()
+                        # Append inferenced label and real label for f1 score
+                        pred_target_list += pred_target.tolist()
+
 
 
                     running_acc += accuracy
