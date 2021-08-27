@@ -35,6 +35,12 @@ class PretrainedModel:
             )
 
             self.init_weight()
+        elif name == "mobilenetv2":
+            self.model = timm.create_model('mobilenetv2_100', pretrained=True)
+            self.model.classifier = torch.nn.Linear(
+                in_features=1280, out_features=class_num, bias=True
+            )
+            self.init_weight(self.model.classifier)
 
         elif name == "efficientnet-b4":
             self.model = EfficientNet.from_pretrained(
@@ -93,7 +99,7 @@ class PretrainedModel:
         if layer.bias is not None:
             torch.nn.init.uniform_(layer.bias, -bound, bound)
 
-    def init_weight(self):
-        torch.nn.init.xavier_uniform_(self.model.fc.weight)
-        stdv = 1.0 / math.sqrt(self.model.fc.weight.size(1))
-        self.model.fc.bias.data.uniform_(-stdv, stdv)
+    def init_weight(self, layer):
+        torch.nn.init.xavier_uniform_(layer.weight)
+        stdv = 1.0 / math.sqrt(layer.weight.size(1))
+        layer.bias.data.uniform_(-stdv, stdv)

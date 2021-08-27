@@ -107,3 +107,4 @@ if __name__ == "__main__":
         generate_csv(config.train_csv, config.train_dir, config.with_system_path_csv)
     if args.split_train:
         main()
+        print('End Train!')

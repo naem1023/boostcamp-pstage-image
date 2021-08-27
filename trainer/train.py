@@ -79,6 +79,7 @@ class BaseTrainer:
                             or config.model_name == "efficientnet-b4"
                             or config.model_name == "efficientnet-b7"
                             or config.model_name == "resnet18"
+                            or config.model_name == "mobilenetv2"
                         ):
                             preds = torch.nn.functional.softmax(logits, dim=-1)
                             # finally get the index of the prediction with highest score
@@ -138,13 +139,14 @@ class BaseTrainer:
                         "val_f1_score": epoch_f1,
                     }
                 )
-            # Check loss
-            # If loss is decreased, save model.
-            early_stopping(epoch_f1, self.model)
+            if train:
+                # Check loss
+                # If loss is decreased, save model.
+                early_stopping(epoch_f1, self.model)
 
-            if early_stopping.early_stop:
-                print('Early Stopping!!')
-                break
+                if early_stopping.early_stop:
+                    print('Early Stopping!!')
+                    break
 
             print(
                 f"epoch-{epoch} Avg Loss: {epoch_loss:.3f}, Avg Accuracy: {epoch_acc:.3f}, f1_score: {epoch_f1:.3f}"

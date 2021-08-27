@@ -42,7 +42,6 @@ def feature_train(train_df, test_df, feature, model_name, model_dir):
 
     model = PretrainedModel(model_name, class_num).model
 
-
     optimizer = torch.optim.Adam(
         model.parameters(), lr=config.LEARNING_RATE
     )  # weight 업데이트를 위한 optimizer를 Adam으로 사용함
