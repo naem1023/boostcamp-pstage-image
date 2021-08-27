@@ -12,3 +12,4 @@ wandb/
 config.py
 2_EDA.ipynb
 data/
+*.pyc
