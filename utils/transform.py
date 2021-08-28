@@ -3,11 +3,11 @@ import albumentations.pytorch
 
 test_transformation = A.Compose(
     [
-        A.CenterCrop(300, 256, p=1),
+        A.CenterCrop(350, 300, p=1),
         # A.Resize(224, 224),
-        A.Normalize(
-            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225],
-        ),
+        # A.Normalize(
+        #     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225],
+        # ),
         albumentations.pytorch.transforms.ToTensorV2(),
     ]
 )

@@ -34,8 +34,6 @@ class BaseTrainer:
         wandb.config.k_fold = config.k_split
         wandb.watch(self.model)
 
-
-
         early_stopping = EarlyStopping(
             patience=patience, verbose=True, path=self.config['model_dir'], feature=self.config['feature'],
             model_name=self.config['model_name']
@@ -49,6 +47,7 @@ class BaseTrainer:
             if self.config['cut_mix']:
                 target_list = [[], []]
                 sum_f1_score = 0.0
+                count = 0
             else:
                 target_list = []
 
@@ -110,6 +109,7 @@ class BaseTrainer:
                     )
 
                     if self.config['cut_mix']:
+                        count += 1
                         sum_f1_score += f1_score(target_list[0], pred_target_list, average="macro") * lam + \
                             f1_score(target_list[1], pred_target_list, average="macro") * (1 - lam)
 
@@ -168,14 +168,13 @@ class BaseTrainer:
             epoch_val_acc = running_val_acc / len(val_dataloader)
 
             if self.config['cut_mix']:
-                epoch_f1 = sum_f1_score / images.size(0)
+                epoch_f1 = sum_f1_score / count
             else:
                 epoch_f1 = f1_score(target_list, pred_target_list, average="macro")
             epoch_val_f1 = f1_score(val_target_list, val_pred_target_list, average="macro")
 
             if config.ray_tune:
-                tune.report(loss=epoch_loss, accuracy=epoch_acc, f1_score=epoch_f1)
-
+                tune.report(loss=epoch_val_loss, accuracy=epoch_val_acc, f1_score=epoch_val_f1)
 
             wandb.log({
                 "accuracy": epoch_acc,
@@ -186,10 +185,10 @@ class BaseTrainer:
                 "val_f1_score": epoch_val_f1,
                 'learning_rate': self.optimizer.param_groups[0]['lr']
             })
-            if epoch > self.config['epoch'] // 2:
+            if epoch > int(self.config['epoch'] * 0.6):
                 # Check loss
                 # If loss is decreased, save model.
-                early_stopping(epoch_val_f1, self.model)
+                early_stopping(epoch_f1, self.model)
 
                 if early_stopping.early_stop:
                     print('Early Stopping!!')

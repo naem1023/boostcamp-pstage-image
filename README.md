@@ -1,4 +1,5 @@
 # Image Classification
+Focus on how to make pipeline.
 Testing many method of CNN, Ensemble and creating simple MLops.
 - Model
     - ResNet18
@@ -7,11 +8,17 @@ Testing many method of CNN, Ensemble and creating simple MLops.
     - BiT
     - CaiT
     - Volo
-    
+    - MobilenetV2
+- Augmentation
+  - CutMix
+  - Albumentation 
 - Ensemble
-    - Bagging
-    - Voting
-
+  - Voting 
+- Method
+  - Early stopping
+  - Ray tune
+  - Wandb
+  
 ## Requirement
 ```shell
 pip install -r requirements.txt

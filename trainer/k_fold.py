@@ -16,7 +16,7 @@ class KFoldTrainer:
 
     def train(self, dataset) -> float:
         if self.config['cut_mix']:
-            collator = CutMixCollator(self.config['cut_mix_alpha'])
+            collator = CutMixCollator(self.config['cut_mix_alpha'], vertical=True)
         else:
             collator = torch.utils.data.dataloader.default_collate
 

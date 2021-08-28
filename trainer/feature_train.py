@@ -16,12 +16,13 @@ from utils import Label
 from . import k_fold
 import config
 from loss_set import CutMixCriterion, get_loss
+from utils import transformation
 
 def feature_train(train_df, test_df, feature, model_name, model_dir):
     print(f"{feature}, {model_name}")
 
     train_dataset = MaskDataset(
-        train_df, config.train_dir, feature=feature,
+        train_df, config.train_dir, feature=feature, transforms=transformation
     )
 
     class_num = len(getattr(Label, feature))
