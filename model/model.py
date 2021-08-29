@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from efficientnet_pytorch import EfficientNet
+# from transformers import BeitFeatureExtractor, BeitForImageClassification
 
 from vit_pytorch import ViT
 from vit_pytorch.deepvit import DeepViT
@@ -14,6 +15,7 @@ from vit_pytorch.cait import CaiT
 import timm
 from model import volo
 from tlt.utils import load_pretrained_weights
+
 
 class BaseModel(nn.Module):
     def __init__(self, num_classes):
@@ -45,6 +47,7 @@ class BaseModel(nn.Module):
         x = x.view(-1, 128)
         return self.fc(x)
 
+
 class PretrainedModel:
     """
     Generate pre-trainned model.
@@ -68,7 +71,7 @@ class PretrainedModel:
                 self.model.fc.weight.shape[0],
             )
 
-            self.init_weight()
+            self.init_weight(self.model.fc)
         elif name == "mobilenetv2":
             self.model = timm.create_model('mobilenetv2_100', pretrained=True)
             # print(self.model)
@@ -81,12 +84,12 @@ class PretrainedModel:
             self.model = EfficientNet.from_pretrained(
                 "efficientnet-b4", num_classes=class_num
             )
-            # self.reset_parameters(self.model._fc)
+            self.reset_parameters(self.model._fc)
         elif name == "efficientnet-b7":
             self.model = EfficientNet.from_pretrained(
                 "efficientnet-b7", num_classes=class_num
             )
-            # self.reset_parameters(self.model._fc)
+            self.reset_parameters(self.model._fc)
         elif name == "volod3":
             self.model = volo.volo_d1()
             load_pretrained_weights(
@@ -100,6 +103,8 @@ class PretrainedModel:
             self.model = timm.create_model(
                 "resnetv2_101x1_bitm", pretrained=True, num_classes=class_num,
             )
+        elif name == 'ViT':
+            self.model = timm.create_model('vit_base_patch16_224', pretrained=True, num_classes=class_num)
         elif name == "deit":
             self.model = torch.hub.load(
                 "facebookresearch/deit:main",
@@ -130,7 +135,8 @@ class PretrainedModel:
 
     def reset_parameters(self, layer):
         bound = 1 / math.sqrt(layer.weight.size(1))
-        torch.nn.init.uniform_(layer.weight, -bound, bound)
+        torch.nn.init.xavier_uniform_(layer.weight)
+        # torch.nn.init.uniform_(layer.weight, -bound, bound)
         if layer.bias is not None:
             torch.nn.init.uniform_(layer.bias, -bound, bound)
 

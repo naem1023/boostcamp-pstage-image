@@ -48,7 +48,8 @@ def feature_train(train_df, test_df, feature, model_name, model_dir):
         'model_dir': model_dir,
         'model_name': model_name,
         'cut_mix': config.cutmix,
-        'cut_mix_alpha': config.cutmix_alpha
+        'cut_mix_alpha': config.cutmix_alpha,
+        'cut_mix_vertical': config.curmix_vertical
     }
 
     kt = k_fold.KFoldTrainer(model_config)

@@ -17,6 +17,13 @@ class BaseTrainer:
         self.optimizer = self.config['optimizer']
         self.criterion = self.config['criterion']
         self.scheduler = self.config['scheduler']
+
+        self.wandb_tag = [self.config['feature'], self.config['model_name']]
+        if self.config['cut_mix'] and self.config['cut_mix_vertical']:
+            self.wandb_tag.append('CutMix-Vertical')
+        elif self.config['cut_mix'] and not self.config['cut_mix_vertical']:
+            self.wandb_tag.append('CutMix')
+
         if self.config['cut_mix']:
             self.val_criterion = get_loss('focal', cutmix=False)
 
@@ -26,7 +33,7 @@ class BaseTrainer:
     def _forward(self, train_dataloader, val_dataloader, patience=7):
         run = wandb.init(
             project="aistage-mask", entity="naem1023",
-            tags=[self.config['feature'], self.config['model_name']]
+            tags=self.wandb_tag
         )
         wandb.config.learning_rate = config.LEARNING_RATE
         wandb.config.batch_size = config.BATCH_SIZE
@@ -72,7 +79,7 @@ class BaseTrainer:
 
                     logits = self.model(images)
 
-                    if self.config['model_name'] in ["BiT", "deit","efficientnet-b4","efficientnet-b7","resnet18","mobilenetv2",'test']:
+                    if self.config['model_name'] in ['ViT', "BiT", "deit","efficientnet-b4","efficientnet-b7","resnet18","mobilenetv2",'test']:
                         preds = torch.nn.functional.softmax(logits, dim=-1)
                         # finally get the index of the prediction with highest score
                         # topk_scores, preds = torch.topk(scores, k=1, dim=-1)
@@ -133,7 +140,7 @@ class BaseTrainer:
 
                         logits = self.model(images)
 
-                        if self.config['model_name'] in ["BiT", "deit", "efficientnet-b4", "efficientnet-b7", "resnet18","mobilenetv2"]:
+                        if self.config['model_name'] in ['ViT', "BiT", "deit", "efficientnet-b4", "efficientnet-b7", "resnet18","mobilenetv2"]:
                             preds = torch.nn.functional.softmax(logits, dim=-1)
                             # finally get the index of the prediction with highest score
                             # topk_scores, preds = torch.topk(scores, k=1, dim=-1)
