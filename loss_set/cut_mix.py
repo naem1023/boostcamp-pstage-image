@@ -21,15 +21,18 @@ def rand_bbox(size, lam):  # size : [Batch_size, Channel, Width, Height]
 
     return bbx1, bby1, bbx2, bby2
 
-def cutmix(batch, alpha, vertical):
+def cutmix(batch, alpha, vertical, vertical_half):
     data, targets = batch
+
+    if vertical_half:
+        lam = 0.5
+    else:
+        lam = np.random.beta(alpha, alpha)
 
     if not vertical:
         indices = torch.randperm(data.size(0))
         shuffled_data = data[indices]
         shuffled_targets = targets[indices]
-
-        lam = np.random.beta(alpha, alpha)
 
         image_h, image_w = data.shape[2:]
         cx = np.random.uniform(0, image_w)
@@ -46,7 +49,6 @@ def cutmix(batch, alpha, vertical):
 
         return data, targets
     else:
-        lam = np.random.beta(alpha, alpha)
         rand_index = torch.randperm(data.size(0))
         target_a = targets  # 원본 이미지 label
         target_b = targets[rand_index]  # 패치 이미지 label
@@ -58,13 +60,14 @@ def cutmix(batch, alpha, vertical):
 
 
 class CutMixCollator:
-    def __init__(self, alpha, vertical=False):
+    def __init__(self, alpha, vertical=False, vertical_half=False):
         self.alpha = alpha
         self.vertical = vertical
+        self.vertical_half = vertical_half
 
     def __call__(self, batch):
         batch = torch.utils.data.dataloader.default_collate(batch)
-        batch = cutmix(batch, self.alpha, self.vertical)
+        batch = cutmix(batch, self.alpha, self.vertical, self.vertical_half)
         return batch
 
 

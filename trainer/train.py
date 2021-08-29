@@ -192,17 +192,20 @@ class BaseTrainer:
                 "val_f1_score": epoch_val_f1,
                 'learning_rate': self.optimizer.param_groups[0]['lr']
             })
-            if epoch > int(self.config['epoch'] * 0.6):
-                # Check loss
-                # If loss is decreased, save model.
-                early_stopping(epoch_f1, self.model)
+            # if epoch > int(self.config['epoch'] * 0.6):
+            # Check loss
+            # If loss is decreased, save model.
+            early_stopping(epoch_f1, self.model)
 
-                if early_stopping.early_stop:
-                    print('Early Stopping!!')
-                    break
+            if early_stopping.early_stop:
+                print('Early Stopping!!')
+                break
 
             print(
                 f"epoch-{epoch} val loss: {epoch_val_loss:.3f}, val acc: {epoch_val_acc:.3f}, val_f1_score: {epoch_val_f1:.3f}"
+            )
+            print(
+                f"epoch-{epoch} loss: {epoch_loss:.3f}, acc: {epoch_acc:.3f}, f1_score: {epoch_f1:.3f}"
             )
 
         run.finish()

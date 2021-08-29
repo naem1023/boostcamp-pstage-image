@@ -19,7 +19,7 @@ class MaskDataset(Dataset):
         self.image_dir = image_dir
         self.label = Label()
         if train:
-            self.classes = self.label.get_classes(feature)
+            self.classes = self.label.get_class_num(feature)
         self.transforms = transforms
         self.train = train
         self.feature = feature

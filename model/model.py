@@ -55,9 +55,9 @@ class PretrainedModel:
     Downlaod model, append layer, and init weight and bias.
     """
 
-    def __init__(self, name, class_num, load_model=True) -> None:
+    def __init__(self, name, class_num, load_model=False) -> None:
         self.name = name
-        print("class num =", class_num)
+        print("load model... class num is", class_num)
         if name == 'test':
             self.model = BaseModel(class_num)
 
@@ -136,7 +136,7 @@ class PretrainedModel:
 
         if load_model:
             self.model.load_state_dict(torch.load(config.pretrained_path))
-            print('load custom pretrained model!!')
+            print('load custom pretrained model!!', config.pretrained_path)
 
     def reset_parameters(self, layer):
         bound = 1 / math.sqrt(layer.weight.size(1))

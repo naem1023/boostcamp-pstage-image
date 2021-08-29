@@ -16,11 +16,12 @@ class KFoldTrainer:
 
     def train(self, dataset) -> float:
         if self.config['cut_mix']:
-            collator = CutMixCollator(self.config['cut_mix_alpha'], vertical=self.config['cut_mix_vertical'])
+            collator = CutMixCollator(self.config['cut_mix_alpha'],
+                                      vertical=self.config['cut_mix_vertical'], vertical_half=self.config['cut_mix_vertical_half'])
         else:
             collator = torch.utils.data.dataloader.default_collate
 
-        train_size = int(0.8 * len(dataset))
+        train_size = int(0.95 * len(dataset))
         test_size = len(dataset) - train_size
 
         train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])

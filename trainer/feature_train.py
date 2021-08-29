@@ -36,8 +36,8 @@ def feature_train(train_df, test_df, feature, model_name, model_dir):
     model.to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=config.LEARNING_RATE)
-    # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50, eta_min=0)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 20, gamma=0.5)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50, eta_min=0)
+    # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 20, gamma=0.5)
     criterion = get_loss(config.loss, cutmix=True)
     model_config = {
         'class_num': class_num,
@@ -54,7 +54,8 @@ def feature_train(train_df, test_df, feature, model_name, model_dir):
         'model_name': model_name,
         'cut_mix': config.cutmix,
         'cut_mix_alpha': config.cutmix_alpha,
-        'cut_mix_vertical': config.curmix_vertical
+        'cut_mix_vertical': config.curmix_vertical,
+        'cut_mix_vertical_half': config.cutmix_vertical_half
     }
 
     kt = k_fold.KFoldTrainer(model_config)

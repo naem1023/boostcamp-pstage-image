@@ -29,6 +29,14 @@ ray_config = {
     "loss": tune.choice(config.loss),
 }
 
+def seed_everything(seed=42):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    # torch.cuda.manual_seed_all(seed)  # if use multi-GPU
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(seed)
+    random.seed(seed)
 
 def train_worker(train_df, test_df):
     date = datetime.now().isoformat().replace(':', '-')
@@ -36,7 +44,7 @@ def train_worker(train_df, test_df):
     os.makedirs(model_dir)
 
     if config.merge_feature:
-        feature_train(train_df, test_df, None, config.model_name, model_dir)
+        feature_train(train_df, test_df, 'Merged feature', config.model_name, model_dir)
     else:
         for feature in config.features:
             feature_train(train_df, test_df, feature, config.model_name, model_dir)

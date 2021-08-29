@@ -31,11 +31,14 @@ class Label:
 
         self.label_number = list(product(Label.mask, Label.gender, Label.age))
 
-    def get_classes(self, feature) -> list:
-        return getattr(self, feature)
+    def get_class_num(self, feature) -> list:
+        if feature == 'Merged feature':
+            return 18
+        else:
+            return len(getattr(Label, feature))
 
     def merge_feature(self, path) -> int:
-        return self.label_number.index(self.mask_feature(path), self.gender_feature(path), self.age_feature(path))
+        return self.label_number.index((self.mask_feature(path), self.gender_feature(path), self.age_feature(path)))
 
     def mask_feature(self, path) -> int:
         file_name = path.split(os.sep)[-1]
@@ -70,7 +73,10 @@ class Label:
 
     def get_label(self, path: str, feature: str) -> int:
         try:
-            return self.feature_func[feature](path)
+            if feature == 'Merged feature':
+                return self.merge_feature(path)
+            else:
+                return self.feature_func[feature](path)
         except FileNameError as e:
             print(e)
             exit()
