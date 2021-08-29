@@ -35,8 +35,11 @@ def train_worker(train_df, test_df):
     model_dir = os.path.join(config.model_dir, date)
     os.makedirs(model_dir)
 
-    for feature in config.features:
-        feature_train(train_df, test_df, feature, config.model_name, model_dir)
+    if config.merge_feature:
+        feature_train(train_df, test_df, None, config.model_name, model_dir)
+    else:
+        for feature in config.features:
+            feature_train(train_df, test_df, feature, config.model_name, model_dir)
 
 
 def main():

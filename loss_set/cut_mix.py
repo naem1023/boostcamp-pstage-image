@@ -1,7 +1,6 @@
 import numpy as np
 import torch
-import torch.nn as nn
-
+from .FocalLoss import FocalLoss
 
 def rand_bbox(size, lam):  # size : [Batch_size, Channel, Width, Height]
     W = size[2]
@@ -71,7 +70,8 @@ class CutMixCollator:
 
 class CutMixCriterion:
     def __init__(self, reduction):
-        self.criterion = nn.CrossEntropyLoss(reduction=reduction)
+        # self.criterion = nn.CrossEntropyLoss(reduction=reduction)
+        self.criterion = FocalLoss()
 
     def __call__(self, preds, targets):
         targets1, targets2, lam = targets

@@ -15,6 +15,7 @@ from vit_pytorch.cait import CaiT
 import timm
 from model import volo
 from tlt.utils import load_pretrained_weights
+import config
 
 
 class BaseModel(nn.Module):
@@ -54,7 +55,7 @@ class PretrainedModel:
     Downlaod model, append layer, and init weight and bias.
     """
 
-    def __init__(self, name, class_num) -> None:
+    def __init__(self, name, class_num, load_model=True) -> None:
         self.name = name
         print("class num =", class_num)
         if name == 'test':
@@ -132,6 +133,10 @@ class PretrainedModel:
                 emb_dropout=0.1,
                 layer_dropout=0.05,  # randomly dropout 5% of the layers
             )
+
+        if load_model:
+            self.model.load_state_dict(torch.load(config.pretrained_path))
+            print('load custom pretrained model!!')
 
     def reset_parameters(self, layer):
         bound = 1 / math.sqrt(layer.weight.size(1))

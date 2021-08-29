@@ -6,7 +6,7 @@ from .FocalLoss import FocalLoss
 from pytorch_metric_learning import losses
 
 
-def get_loss(name, cutmix):
+def get_loss(name, cutmix=False):
     if cutmix:
         criterion = CutMixCriterion(reduction='mean')
     elif name == "crossentropy":

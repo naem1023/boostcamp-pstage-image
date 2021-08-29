@@ -25,14 +25,19 @@ def feature_train(train_df, test_df, feature, model_name, model_dir):
         train_df, config.train_dir, feature=feature, transforms=transformation
     )
 
-    class_num = len(getattr(Label, feature))
+    class_num = 18 if config.merge_feature else len(getattr(Label, feature))
 
     device = torch.device("cuda:0")
-    model = PretrainedModel(model_name, class_num).model
+    if len(config.pretrained_path) == 0:
+        load_model = False
+    else:
+        load_model = True
+    model = PretrainedModel(model_name, class_num, load_model=load_model).model
     model.to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=config.LEARNING_RATE)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50, eta_min=0)
+    # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50, eta_min=0)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 20, gamma=0.5)
     criterion = get_loss(config.loss, cutmix=True)
     model_config = {
         'class_num': class_num,

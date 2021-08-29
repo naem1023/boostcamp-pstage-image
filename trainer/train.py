@@ -30,7 +30,7 @@ class BaseTrainer:
     def train(self, train_dataloader, val_dataloader):
         self._forward(train_dataloader, val_dataloader)
 
-    def _forward(self, train_dataloader, val_dataloader, patience=7):
+    def _forward(self, train_dataloader, val_dataloader, patience=5):
         run = wandb.init(
             project="aistage-mask", entity="naem1023",
             tags=self.wandb_tag

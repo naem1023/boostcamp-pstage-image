@@ -12,7 +12,7 @@ age
     >=60: 2
 """
 import os
-
+from itertools import product
 class FileNameError(Exception):
     def __init__(self, msg):
         super().__init__(msg)
@@ -22,7 +22,6 @@ class Label:
     mask = [0, 1, 2]
     gender = [0, 1]
     age = [0, 1, 2]
-
     def __init__(self):
         self.feature_func = {
             "gender": self.gender_feature,
@@ -30,8 +29,13 @@ class Label:
             "age": self.age_feature,
         }
 
+        self.label_number = list(product(Label.mask, Label.gender, Label.age))
+
     def get_classes(self, feature) -> list:
         return getattr(self, feature)
+
+    def merge_feature(self, path) -> int:
+        return self.label_number.index(self.mask_feature(path), self.gender_feature(path), self.age_feature(path))
 
     def mask_feature(self, path) -> int:
         file_name = path.split(os.sep)[-1]
@@ -55,11 +59,11 @@ class Label:
 
     def age_feature(self, path) -> int:
         age = int(path.split(os.sep)[-2][-2:])
-        if age < 30:
+        if age < 28:
             return 0
-        elif 30 <= age < 60:
+        elif 28 <= age < 59:
             return 1
-        elif age >= 60:
+        elif age >= 59:
             return 2
         else:
             raise FileNameError("Age naming error")
