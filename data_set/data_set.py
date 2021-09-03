@@ -4,9 +4,12 @@ from utils import Label
 from PIL import Image
 import numpy as np
 import torch
-
+import cv2
+import os
 import albumentations as A
 import albumentations.pytorch
+
+from utils import test_transformation
 
 
 class MaskDataset(Dataset):
@@ -17,7 +20,7 @@ class MaskDataset(Dataset):
         self.image_dir = image_dir
         self.label = Label()
         if train:
-            self.classes = self.label.get_classes(feature)
+            self.classes = self.label.get_class_num(feature)
         self.transforms = transforms
         self.train = train
         self.feature = feature
@@ -27,15 +30,7 @@ class MaskDataset(Dataset):
             self.data_df = get_test_img_path(self.data_df, self.image_dir)
 
         if self.transforms is None:
-            self.transforms = A.Compose(
-                [
-                    A.CenterCrop(300, 300, p=1),
-                    A.Normalize(
-                        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225],
-                    ),
-                    albumentations.pytorch.transforms.ToTensorV2(),
-                ]
-            )
+            self.transforms = test_transformation
 
     def __len__(self):
         if isinstance(self.data_df, list):
@@ -51,10 +46,15 @@ class MaskDataset(Dataset):
             target_path = self.data_df[idx]
             label = target_path
 
-        img = np.array(Image.open(target_path).convert("RGB"))
+        # img = np.array(Image.open(target_path).convert("RGB"))
+        if not os.path.isfile(target_path):
+            print(target_path)
+            exit()
+        img = cv2.imread(target_path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         if self.transforms:
             img = self.transforms(image=img)
             img = img["image"].type(torch.FloatTensor)
-
+            # img = img["image"]
         return img, label

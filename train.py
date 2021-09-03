@@ -5,8 +5,6 @@ import os
 from functools import partial
 from datetime import datetime
 
-from torchvision import transforms
-from torchvision.transforms import Resize, ToTensor, Normalize
 import torch
 
 from utils import generate_csv
@@ -24,26 +22,37 @@ import torch.backends.cudnn as cudnn
 
 os.environ['WANDB_API_KEY'] = config.wandb_api_key
 
-ray_config = {
-    "batch_size": tune.choice([2, 4, 8, 16]),
-    "loss": tune.choice(config.loss),
-}
-
+def seed_everything(seed=4242):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    # torch.cuda.manual_seed_all(seed)  # if use multi-GPU
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(seed)
+    random.seed(seed)
 
 def train_worker(train_df, test_df):
     date = datetime.now().isoformat().replace(':', '-')
     model_dir = os.path.join(config.model_dir, date)
     os.makedirs(model_dir)
 
-    for feature in config.features:
-        feature_train(train_df, test_df, feature, config.model_name, model_dir)
+    if config.merge_feature:
+        feature_train(train_df, test_df, config.merge_feature_name, config.model_name, model_dir)
+    else:
+        for feature in config.features:
+            feature_train(train_df, test_df, feature, config.model_name, model_dir)
 
 
 def main():
+    seed_everything()
     train_df = pd.read_csv(config.with_system_path_csv)
     test_df = pd.read_csv(config.test_csv)
 
     if config.ray_tune:
+        ray_config = {
+            "batch_size": tune.choice([2, 4, 8, 16]),
+            "loss": tune.choice(config.loss),
+        }
         # set scheduler
         scheduler = ASHAScheduler(
             metric="f1_score",  # statics for selecting model

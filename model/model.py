@@ -4,14 +4,48 @@ import math
 
 import torchvision
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from efficientnet_pytorch import EfficientNet
+# from transformers import BeitFeatureExtractor, BeitForImageClassification
 
-from vit_pytorch import ViT
-from vit_pytorch.deepvit import DeepViT
 from vit_pytorch.cait import CaiT
 import timm
-from model import volo
+from . import volo
 from tlt.utils import load_pretrained_weights
+
+
+# from nfnets import pretrained_nfnet
+
+class BaseModel(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=7, stride=1)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=1)
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=1)
+        self.dropout1 = nn.Dropout(0.25)
+        self.dropout2 = nn.Dropout(0.25)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(128, num_classes)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = F.relu(x)
+
+        x = self.conv2(x)
+        x = F.relu(x)
+        x = F.max_pool2d(x, 2)
+        x = self.dropout1(x)
+
+        x = self.conv3(x)
+        x = F.relu(x)
+        x = F.max_pool2d(x, 2)
+        x = self.dropout2(x)
+
+        x = self.avgpool(x)
+        x = x.view(-1, 128)
+        return self.fc(x)
 
 
 class PretrainedModel:
@@ -20,10 +54,13 @@ class PretrainedModel:
     Downlaod model, append layer, and init weight and bias.
     """
 
-    def __init__(self, name, class_num) -> None:
+    def __init__(self, name, class_num, pretrained_path=None) -> None:
         self.name = name
-        print("class num =", class_num)
-        if name == "resnet18":
+        print("load model... class num is", class_num)
+        if name == 'test':
+            self.model = BaseModel(class_num)
+
+        elif name == "resnet18":
             self.model = torchvision.models.resnet18(pretrained=True)
             self.model.fc = torch.nn.Linear(
                 in_features=512, out_features=class_num, bias=True
@@ -34,24 +71,29 @@ class PretrainedModel:
                 self.model.fc.weight.shape[0],
             )
 
-            self.init_weight()
+            self.init_weight(self.model.fc)
         elif name == "mobilenetv2":
             self.model = timm.create_model('mobilenetv2_100', pretrained=True)
+            # print(self.model)
             self.model.classifier = torch.nn.Linear(
                 in_features=1280, out_features=class_num, bias=True
             )
             self.init_weight(self.model.classifier)
 
+        elif name == "efficientnet-b2":
+            self.model = EfficientNet.from_pretrained(
+                "efficientnet-b2", num_classes=class_num
+            )
         elif name == "efficientnet-b4":
             self.model = EfficientNet.from_pretrained(
                 "efficientnet-b4", num_classes=class_num
             )
-            # self.reset_parameters(self.model._fc)
+            self.reset_parameters(self.model._fc)
         elif name == "efficientnet-b7":
             self.model = EfficientNet.from_pretrained(
                 "efficientnet-b7", num_classes=class_num
             )
-            # self.reset_parameters(self.model._fc)
+            self.reset_parameters(self.model._fc)
         elif name == "volod3":
             self.model = volo.volo_d1()
             load_pretrained_weights(
@@ -65,6 +107,8 @@ class PretrainedModel:
             self.model = timm.create_model(
                 "resnetv2_101x1_bitm", pretrained=True, num_classes=class_num,
             )
+        elif name == 'ViT':
+            self.model = timm.create_model('vit_base_patch16_224', pretrained=True, num_classes=class_num)
         elif name == "deit":
             self.model = torch.hub.load(
                 "facebookresearch/deit:main",
@@ -92,10 +136,16 @@ class PretrainedModel:
                 emb_dropout=0.1,
                 layer_dropout=0.05,  # randomly dropout 5% of the layers
             )
+        # elif name == 'NFNet-F1':
+            # model_F1 = pretrained_nfnet('pretrained/F1_haiku.npz')
+        if pretrained_path:
+            self.model.load_state_dict(torch.load(pretrained_path))
+            print('load custom pretrained model!!', pretrained_path)
 
     def reset_parameters(self, layer):
         bound = 1 / math.sqrt(layer.weight.size(1))
-        torch.nn.init.uniform_(layer.weight, -bound, bound)
+        torch.nn.init.xavier_uniform_(layer.weight)
+        # torch.nn.init.uniform_(layer.weight, -bound, bound)
         if layer.bias is not None:
             torch.nn.init.uniform_(layer.bias, -bound, bound)
 
